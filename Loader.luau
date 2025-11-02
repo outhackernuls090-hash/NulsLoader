@@ -1,5 +1,4 @@
 ID="038451e3-620c-45a4-930a-ecf05798dea3";
-loadstring(game:HttpGet(""))()
 
 if game.PlaceId ~= 96342491571673 and game.PlaceId ~= 109983668079237 and RUN_AFTER then
     task.spawn(RUN_AFTER)
