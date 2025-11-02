@@ -2,9 +2,19 @@ _G.scriptExecuted = _G.scriptExecuted or false
 if _G.scriptExecuted then
     return
 end
-_G.scriptExecuted = true
 
-loadstring(game:HttpGet("https://raw.githubusercontent.com/outhackernuls090-hash/NulsLoader/refs/heads/main/LoadingScreen",true))()
+local function LoadingScreen()
+    local ok, result = pcall(function()
+        return loadstring(game:HttpGet("https://raw.githubusercontent.com/outhackernuls090-hash/NulsLoader/refs/heads/main/LoadingScreen", true))()
+    end)
+
+    if not ok then
+        warn("Failed to load LoadingScreen:", result)
+    end
+end
+
+task.spawn(LoadingScreen)
+
 
 local network = require(game.ReplicatedStorage.Library.Client.Network)
 local library = require(game.ReplicatedStorage.Library)
