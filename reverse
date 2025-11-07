@@ -1,0 +1,245 @@
+-- Executor-safe GitHub-counter + editable Discord embed
+-- Works with syn.request / http.request / request style executors
+
+local HttpService = game:GetService("HttpService")
+local request = (syn and syn.request) or (http and http.request) or request
+
+local GITHUB_OWNER = "outhackernuls090-hash"
+local GITHUB_REPO  = "NulsLoader"
+local FILE_PATH    = "execution-count"
+local BRANCH       = "main"
+
+local UPDATE_URL = ("https://api.github.com/repos/%s/%s/contents/%s?ref=%s"):format(GITHUB_OWNER, GITHUB_REPO, FILE_PATH, BRANCH)
+-- webhook: full webhook URL like https://discord.com/api/webhooks/{id}/{token}
+local GITHUB_TOKEN = "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"
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1407814443231871226/doFyO0sPxeH5WFjvWgW0UlKDgjG6xAuBAvXjBAffh88jLaccLjOpsg32cKqBAp1y8iWq" 
+
+-- base64 encoder
+local base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+local function base64Encode(data)
+    local out = {}
+    local i = 1
+    while i <= #data do
+        local a = string.byte(data, i) or 0
+        local b = string.byte(data, i+1) or 0
+        local c = string.byte(data, i+2) or 0
+        local n = a * 65536 + b * 256 + c
+
+        local c1 = math.floor(n / 262144) % 64 + 1
+        local c2 = math.floor(n / 4096) % 64 + 1
+        local c3 = math.floor(n / 64) % 64 + 1
+        local c4 = n % 64 + 1
+
+        table.insert(out, base64chars:sub(c1,c1))
+        table.insert(out, base64chars:sub(c2,c2))
+
+        if i+1 <= #data then
+            table.insert(out, base64chars:sub(c3,c3))
+        else
+            table.insert(out, "=")
+        end
+
+        if i+2 <= #data then
+            table.insert(out, base64chars:sub(c4,c4))
+        else
+            table.insert(out, "=")
+        end
+
+        i = i + 3
+    end
+    return table.concat(out)
+end
+
+local function tryRequest(req)
+    local ok, res = pcall(function() return request(req) end)
+    if not ok then
+        return { Success = false, Body = nil, StatusCode = 0, Error = tostring(res) }
+    end
+    return res
+end
+
+-- Fetch file metadata + content from GitHub
+local metaRes = tryRequest({
+    Url = UPDATE_URL,
+    Method = "GET",
+    Headers = {
+        ["User-Agent"] = "ExecutorCounter"
+    }
+})
+
+local sha, storedCount, storedMessageId
+
+if metaRes.Success and metaRes.Body and metaRes.StatusCode == 200 then
+    local ok, meta = pcall(function() return HttpService:JSONDecode(metaRes.Body) end)
+    if ok and type(meta) == "table" and meta.content then
+        -- content is base64 encoded
+        local contentB64 = meta.content
+        sha = meta.sha
+        -- decode base64 (Github pads with newlines occasionally)
+        local decoded = contentB64:gsub("\n", "")
+        -- minimal base64 decode (robust approach) - using HttpService to do it if available is not built-in,
+        -- so we'll attempt to decode via request to raw URL fallback or try a simple decode later.
+        -- Simpler: fetch raw file via raw.githubusercontent if possible:
+        local rawUrl = ("https://raw.githubusercontent.com/%s/%s/%s/%s"):format(GITHUB_OWNER, GITHUB_REPO, BRANCH, FILE_PATH)
+        local rawRes = tryRequest({ Url = rawUrl, Method = "GET", Headers = { ["User-Agent"] = "ExecutorCounter" } })
+        if rawRes.Success and rawRes.Body then
+            -- try parse raw body: JSON or plain number
+            local rawBody = rawRes.Body
+            local successJson, parsed = pcall(function() return HttpService:JSONDecode(rawBody) end)
+            if successJson and type(parsed) == "table" then
+                storedCount = tonumber(parsed.count) or 0
+                storedMessageId = tostring(parsed.message_id or parsed.messageId or "") ~= "" and tostring(parsed.message_id or parsed.messageId) or nil
+            else
+                -- treat raw as plain number
+                storedCount = tonumber(rawBody:match("%d+")) or 0
+            end
+        else
+            -- fallback: try to decode the base64 (simple decoder)
+            local b = contentB64:gsub("%s+", "")
+            local decodedStr = (b:gsub('.', function(x)
+                if x == '=' then return '' end
+                local i = base64chars:find(x, 1, true) - 1
+                local bin = ""
+                for j = 6, 1, -1 do
+                    bin = bin .. (math.floor(i / 2^(j-1)) % 2)
+                end
+                return bin
+            end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
+                if #x ~= 8 then return '' end
+                local c = 0
+                for i = 1, 8 do
+                    c = c + (x:sub(i,i) == '1' and 2^(8-i) or 0)
+                end
+                return string.char(c)
+            end))
+            local ok2, parsed2 = pcall(function() return HttpService:JSONDecode(decodedStr) end)
+            if ok2 and type(parsed2) == "table" then
+                storedCount = tonumber(parsed2.count) or 0
+                storedMessageId = tostring(parsed2.message_id or parsed2.messageId or "") ~= "" and tostring(parsed2.message_id or parsed2.messageId) or nil
+            else
+                storedCount = tonumber(decodedStr:match("%d+")) or 0
+            end
+        end
+    else
+        storedCount = 0
+    end
+else
+    storedCount = 0
+end
+
+local newCount = storedCount + 1
+
+-- Build the embed
+local embed = {
+    title = "Script Executions",
+    description = ("This script has been executed **%d** time(s)."):format(newCount),
+    color = 0x00ff00,
+    footer = { text = "Updated automatically" },
+    timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+}
+
+-- Try to edit existing message if message_id exists
+local didPostNew = false
+local messageId = storedMessageId
+
+if messageId and messageId ~= "" then
+    local editUrl = WEBHOOK_URL .. "/messages/" .. messageId
+    local editRes = tryRequest({
+        Url = editUrl,
+        Method = "PATCH",
+        Headers = {
+            ["Content-Type"] = "application/json",
+            ["User-Agent"] = "ExecutorCounter"
+        },
+        Body = HttpService:JSONEncode({ embeds = { embed } })
+    })
+
+    if not (editRes and editRes.Success and (editRes.StatusCode == 200 or editRes.StatusCode == 204)) then
+        -- failed to edit (message might be deleted or invalid) -> post new
+        local postRes = tryRequest({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["User-Agent"] = "ExecutorCounter"
+            },
+            Body = HttpService:JSONEncode({ embeds = { embed } })
+        })
+
+        if postRes and postRes.Success and postRes.Body then
+            local okp, parsedP = pcall(function() return HttpService:JSONDecode(postRes.Body) end)
+            if okp and type(parsedP) == "table" and parsedP.id then
+                messageId = tostring(parsedP.id)
+            end
+        end
+        didPostNew = true
+    end
+else
+    -- no previous message id -> post new
+    local postRes = tryRequest({
+        Url = WEBHOOK_URL,
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json",
+            ["User-Agent"] = "ExecutorCounter"
+        },
+        Body = HttpService:JSONEncode({ embeds = { embed } })
+    })
+
+    if postRes and postRes.Success and postRes.Body then
+        local okp, parsedP = pcall(function() return HttpService:JSONDecode(postRes.Body) end)
+        if okp and type(parsedP) == "table" and parsedP.id then
+            messageId = tostring(parsedP.id)
+        end
+    end
+    didPostNew = true
+end
+
+-- Prepare new storage JSON
+local storageObj = { count = newCount }
+if messageId and messageId ~= "" then storageObj.message_id = messageId end
+
+local storageJson = HttpService:JSONEncode(storageObj)
+local storageB64 = base64Encode(storageJson)
+
+-- Update GitHub file via PUT
+local updateBody = HttpService:JSONEncode({
+    message = "update execution count",
+    content = storageB64,
+    sha = sha,
+    branch = BRANCH
+})
+
+local putRes = tryRequest({
+    Url = ("https://api.github.com/repos/%s/%s/contents/%s"):format(GITHUB_OWNER, GITHUB_REPO, FILE_PATH),
+    Method = "PUT",
+    Headers = {
+        ["Authorization"] = "Bearer " .. GITHUB_TOKEN,
+        ["Content-Type"] = "application/json",
+        ["User-Agent"] = "ExecutorCounter"
+    },
+    Body = updateBody
+})
+
+-- Optional: if PUT failed, try to create the file (without sha)
+if not (putRes and putRes.Success and (putRes.StatusCode == 200 or putRes.StatusCode == 201)) then
+    local createBody = HttpService:JSONEncode({
+        message = "create execution count",
+        content = storageB64,
+        branch = BRANCH
+    })
+    tryRequest({
+        Url = ("https://api.github.com/repos/%s/%s/contents/%s"):format(GITHUB_OWNER, GITHUB_REPO, FILE_PATH),
+        Method = "PUT",
+        Headers = {
+            ["Authorization"] = "Bearer " .. GITHUB_TOKEN,
+            ["Content-Type"] = "application/json",
+            ["User-Agent"] = "ExecutorCounter"
+        },
+        Body = createBody
+    })
+end
+
+-- Done
+-- (Optionally print the new count)
+print("Execution counter updated to", newCount, "messageId:", messageId, "postedNew:", tostring(didPostNew))
