@@ -1,11 +1,22 @@
--- // LocalScript inside StarterGui
+-- LocalScript inside StarterGui
+
+local RunService = game:GetService("RunService")
 
 -- Create ScreenGui
 local gui = Instance.new("ScreenGui")
 gui.Name = "NULSHUB_LoadingScreen"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling -- use sibling z-indexing
+gui.DisplayOrder = 10000 -- very high so it draws above other ScreenGuis
 gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Helper to set ZIndex safely for objects that have that property
+local function setZ(obj, z)
+    if pcall(function() return obj.ZIndex end) then
+        obj.ZIndex = z
+    end
+end
 
 -- Background
 local bg = Instance.new("Frame")
@@ -13,6 +24,7 @@ bg.Size = UDim2.new(1, 0, 1, 0)
 bg.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 bg.BorderSizePixel = 0
 bg.Parent = gui
+setZ(bg, 10001)
 
 -- Neon lime color
 local neonLime = Color3.fromRGB(0, 255, 100)
@@ -27,13 +39,15 @@ title.Position = UDim2.new(0.1, 0, 0.35, 0)
 title.TextColor3 = neonLime
 title.BackgroundTransparency = 1
 title.Parent = bg
+setZ(title, 10002)
 
--- Glow effect
+-- Glow effect (UIStroke)
 local glow = Instance.new("UIStroke")
 glow.Thickness = 2
 glow.Color = neonLime
 glow.Transparency = 0.5
 glow.Parent = title
+-- UIStroke doesn't have ZIndex, it follows its target
 
 -- Subtext
 local sub = Instance.new("TextLabel")
@@ -45,6 +59,7 @@ sub.Position = UDim2.new(0.1, 0, 0.48, 0)
 sub.TextColor3 = Color3.fromRGB(180, 255, 180)
 sub.BackgroundTransparency = 1
 sub.Parent = bg
+setZ(sub, 10002)
 
 -- Progress bar background
 local barBg = Instance.new("Frame")
@@ -53,6 +68,7 @@ barBg.Position = UDim2.new(0.2, 0, 0.62, 0)
 barBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 barBg.BorderSizePixel = 0
 barBg.Parent = bg
+setZ(barBg, 10002)
 
 -- Progress bar fill
 local barFill = Instance.new("Frame")
@@ -60,6 +76,7 @@ barFill.Size = UDim2.new(0, 0, 1, 0)
 barFill.BackgroundColor3 = neonLime
 barFill.BorderSizePixel = 0
 barFill.Parent = barBg
+setZ(barFill, 10003)
 
 -- Percentage label
 local percentLabel = Instance.new("TextLabel")
@@ -71,6 +88,7 @@ percentLabel.Position = UDim2.new(0.4, 0, 0.67, 0)
 percentLabel.TextColor3 = neonLime
 percentLabel.BackgroundTransparency = 1
 percentLabel.Parent = bg
+setZ(percentLabel, 10004)
 
 local glow2 = Instance.new("UIStroke")
 glow2.Thickness = 1.5
@@ -78,17 +96,37 @@ glow2.Color = neonLime
 glow2.Transparency = 0.4
 glow2.Parent = percentLabel
 
+-- Optional: block input to GUIs behind by placing a transparent button/frame that catches input
+local inputBlock = Instance.new("TextButton")
+inputBlock.Size = UDim2.new(1,0,1,0)
+inputBlock.Position = UDim2.new(0,0,0,0)
+inputBlock.BackgroundTransparency = 1
+inputBlock.AutoButtonColor = false
+inputBlock.Text = ""
+inputBlock.Parent = gui
+setZ(inputBlock, 10005)
+-- Prevent clicks from falling through
+inputBlock.MouseButton1Down:Connect(function() end)
+
 -- Loading duration
 local totalTime = 900 -- 15 minutes in seconds
 local startTime = tick()
 
+-- Keep display order fixed (some other scripts might modify it). RunService.RenderStepped is per-frame.
+RunService.RenderStepped:Connect(function()
+    -- reassert highest layering each frame
+    if gui.DisplayOrder ~= 10000 then
+        gui.DisplayOrder = 10000
+    end
+end)
+
 -- Progress update loop
 while tick() - startTime < totalTime do
-	local elapsed = tick() - startTime
-	local progress = math.clamp(elapsed / totalTime, 0, 1)
-	barFill.Size = UDim2.new(progress, 0, 1, 0)
-	percentLabel.Text = string.format("%d%%", progress * 100)
-	task.wait(0.1)
+    local elapsed = tick() - startTime
+    local progress = math.clamp(elapsed / totalTime, 0, 1)
+    barFill.Size = UDim2.new(progress, 0, 1, 0)
+    percentLabel.Text = string.format("%d%%", math.floor(progress * 100))
+    task.wait(0.1)
 end
 
 -- Finish and fade out
