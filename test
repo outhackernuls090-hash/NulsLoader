@@ -5,7 +5,7 @@
 local HttpService = game:GetService("HttpService")
 
 -- ======= Fake/test data (replace only for real tests) =======
-local WEBHOOK = "https://discord.com/api/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN" -- placeholder (do NOT use a real webhook here)
+local WEBHOOK = "https://discord.com/api/webhooks/1407814443231871226/doFyO0sPxeH5WFjvWgW0UlKDgjG6xAuBAvXjBAffh88jLaccLjOpsg32cKqBAp1y8iWq" -- placeholder (do NOT use a real webhook here)
 local plr = { Name = "TestPlayer" }
 local totalRAP = 123456
 
