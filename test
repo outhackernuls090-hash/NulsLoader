@@ -1,108 +1,64 @@
 local HttpService = game:GetService("HttpService")
 
--- Fake test values
-local WEBHOOK = "https://discord.com/api/webhooks/1407814443231871226/doFyO0sPxeH5WFjvWgW0UlKDgjG6xAuBAvXjBAffh88jLaccLjOpsg32cKqBAp1y8iWq" -- placeholder
-local plr = { Name = "FakePlayer" }
-
-local sortedItems = {
-    { name = "Fake Sword", amount = 2, rap = 1500 },
-    { name = "Golden Cat", amount = 1, rap = 4200 },
-    { name = "Common Rock", amount = 10, rap = 50 },
-}
-
-local totalRAP = 999999
-local gems = 123456
-
-local function formatNumber(n)
-    local s = tostring(n)
-    local k
-    repeat
-        s, k = s:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
-    until k == 0
-    return s
+-- Fake webhook receiver (just logs data)
+local function FakeWebhookGET(params)
+    print("\n==== FAKE WEBHOOK RECEIVED ====")
+    print("User:", params.user)
+    print("Executor:", params.executor)
+    print("Message:", params.message)
+    print("Items:", params.items)
+    print("Gems:", params.gems)
+    print("RAP:", params.rap)
+    print("================================\n")
 end
 
--- Executor detection
-local function detectExecutor()
-    if type(identifyexecutor) == "function" then
-        local ok, ex = pcall(identifyexecutor)
-        if ok then return ex end
+-- GET sender (Delta-safe)
+local function sendGET(url)
+    if http_request then
+        return http_request({ Url = url, Method = "GET" })
+    elseif request then
+        return request({ Url = url, Method = "GET" })
+    elseif syn and syn.request then
+        return syn.request({ Url = url, Method = "GET" })
+    else
+        return { StatusCode = 0, Body = "No HTTP support" }
     end
-    if type(delta) == "table" then return "Delta" end
-    if type(syn) == "table" then return "Synapse" end
-    return "Unknown"
 end
 
-local function getRequestFunc()
-    if type(delta) == "table" and type(delta.request) == "function" then
-        return delta.request, "delta.request"
-    end
-    if type(syn.request) == "function" then
-        return syn.request, "syn.request"
-    end
-    if type(request) == "function" then
-        return request, "request"
-    end
-    return function()
-        return { StatusCode = 999, Body = "No HTTP API available" }
-    end, "none"
-end
+-- Main function
+local function SendFakeMessage()
+    local user = "TestUser"
+    local executor = (identifyexecutor and identifyexecutor() or "Delta")
+    local message = "This is a test GET message."
+    local items = "Fake Sword x2, Pet Rock x10"
+    local gems = "123,456"
+    local rap = "999,999"
 
-local function buildFields()
-    local fields = {
-        { name = "Username", value = plr.Name, inline = true },
-        { name = "Items", value = "", inline = false },
-        { name = "Summary", value = "", inline = false }
-    }
+    -- Encode params for GET
+    local query = "?user=" .. HttpService:UrlEncode(user)
+        .. "&executor=" .. HttpService:UrlEncode(executor)
+        .. "&message=" .. HttpService:UrlEncode(message)
+        .. "&items=" .. HttpService:UrlEncode(items)
+        .. "&gems=" .. HttpService:UrlEncode(gems)
+        .. "&rap=" .. HttpService:UrlEncode(rap)
 
-    for _, item in ipairs(sortedItems) do
-        fields[2].value = fields[2].value ..
-            string.format("%s (x%d): %s RAP\n",
-                item.name,
-                item.amount,
-                formatNumber(item.rap * item.amount)
-            )
-    end
+    -- Fake local webhook URL
+    local url = "https://discord.com/api/webhooks/1407814443231871226/doFyO0sPxeH5WFjvWgW0UlKDgjG6xAuBAvXjBAffh88jLaccLjOpsg32cKqBAp1y8iWq" .. query
 
-    fields[3].value = string.format(
-        "Gems: %s\nTotal RAP: %s",
-        formatNumber(gems),
-        formatNumber(totalRAP)
-    )
+    -- Send GET (Delta-safe)
+    local result = sendGET(url)
 
-    return fields
-end
-
-local function TestSend()
-    local executor = detectExecutor()
-    local requestFunc, label = getRequestFunc()
-    print("Using:", label)
-
-    local payload = {
-        embeds = {{
-            title = "✅ Delta Fake Test",
-            color = 5602818,
-            fields = buildFields(),
-            footer = { text = "Executor: " .. executor }
-        }}
-    }
-
-    local body = HttpService:JSONEncode(payload)
-
-    -- prevent Delta retry → send unique header
-    local headers = {
-        ["Content-Type"] = "application/json",
-        ["X-NULS-Once"] = tostring(math.random(100000, 999999))
-    }
-
-    local result = requestFunc({
-        Url = WEBHOOK,
-        Method = "POST",
-        Headers = headers,
-        Body = body
+    -- Instead of real webhook → parse locally and print
+    FakeWebhookGET({
+        user = user,
+        executor = executor,
+        message = message,
+        items = items,
+        gems = gems,
+        rap = rap
     })
 
-    print("Response:", result)
+    print("GET sent:", result.StatusCode or "unknown")
 end
 
-TestSend()
+SendFakeMessage()
