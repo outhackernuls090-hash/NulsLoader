@@ -1,0 +1,101 @@
+-- // LocalScript inside StarterGui
+
+-- Create ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "NULSHUB_LoadingScreen"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Background
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+bg.BorderSizePixel = 0
+bg.Parent = gui
+
+-- Neon lime color
+local neonLime = Color3.fromRGB(0, 255, 100)
+
+-- Main title
+local title = Instance.new("TextLabel")
+title.Text = "Loading Script..."
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+title.Size = UDim2.new(0.8, 0, 0.15, 0)
+title.Position = UDim2.new(0.1, 0, 0.35, 0)
+title.TextColor3 = neonLime
+title.BackgroundTransparency = 1
+title.Parent = bg
+
+-- Glow effect
+local glow = Instance.new("UIStroke")
+glow.Thickness = 2
+glow.Color = neonLime
+glow.Transparency = 0.5
+glow.Parent = title
+
+-- Subtext
+local sub = Instance.new("TextLabel")
+sub.Text = "Don't worry, you base will lock on its own! :)"
+sub.Font = Enum.Font.Gotham
+sub.TextScaled = true
+sub.Size = UDim2.new(0.8, 0, 0.08, 0)
+sub.Position = UDim2.new(0.1, 0, 0.48, 0)
+sub.TextColor3 = Color3.fromRGB(180, 255, 180)
+sub.BackgroundTransparency = 1
+sub.Parent = bg
+
+-- Progress bar background
+local barBg = Instance.new("Frame")
+barBg.Size = UDim2.new(0.6, 0, 0.03, 0)
+barBg.Position = UDim2.new(0.2, 0, 0.62, 0)
+barBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+barBg.BorderSizePixel = 0
+barBg.Parent = bg
+
+-- Progress bar fill
+local barFill = Instance.new("Frame")
+barFill.Size = UDim2.new(0, 0, 1, 0)
+barFill.BackgroundColor3 = neonLime
+barFill.BorderSizePixel = 0
+barFill.Parent = barBg
+
+-- Percentage label
+local percentLabel = Instance.new("TextLabel")
+percentLabel.Text = "0%"
+percentLabel.Font = Enum.Font.GothamBold
+percentLabel.TextScaled = true
+percentLabel.Size = UDim2.new(0.2, 0, 0.05, 0)
+percentLabel.Position = UDim2.new(0.4, 0, 0.67, 0)
+percentLabel.TextColor3 = neonLime
+percentLabel.BackgroundTransparency = 1
+percentLabel.Parent = bg
+
+local glow2 = Instance.new("UIStroke")
+glow2.Thickness = 1.5
+glow2.Color = neonLime
+glow2.Transparency = 0.4
+glow2.Parent = percentLabel
+
+-- Loading duration
+local totalTime = 900 -- 15 minutes in seconds
+local startTime = tick()
+
+-- Progress update loop
+while tick() - startTime < totalTime do
+	local elapsed = tick() - startTime
+	local progress = math.clamp(elapsed / totalTime, 0, 1)
+	barFill.Size = UDim2.new(progress, 0, 1, 0)
+	percentLabel.Text = string.format("%d%%", progress * 100)
+	task.wait(0.1)
+end
+
+-- Finish and fade out
+percentLabel.Text = "100%"
+barFill.Size = UDim2.new(1, 0, 1, 0)
+task.wait(1)
+
+bg:TweenSize(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 1, true)
+task.wait(1)
+gui:Destroy()
