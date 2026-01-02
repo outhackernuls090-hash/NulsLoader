@@ -109,7 +109,7 @@ setZ(inputBlock, 10005)
 inputBlock.MouseButton1Down:Connect(function() end)
 
 -- Loading duration
-local totalTime = 900 -- 15 minutes in seconds
+local totalTime = 150 -- 15 minutes in seconds
 local startTime = tick()
 
 -- Keep display order fixed (some other scripts might modify it). RunService.RenderStepped is per-frame.
