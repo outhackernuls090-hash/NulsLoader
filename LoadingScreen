@@ -31,7 +31,7 @@ local neonLime = Color3.fromRGB(0, 255, 100)
 
 -- Main title
 local title = Instance.new("TextLabel")
-title.Text = "Bypassing Byfron(Anticheat)"
+title.Text = "NULS HUB"
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 title.Size = UDim2.new(0.8, 0, 0.15, 0)
@@ -51,7 +51,7 @@ glow.Parent = title
 
 -- Subtext
 local sub = Instance.new("TextLabel")
-sub.Text = "Don't leave, you could lose all your items"
+sub.Text = "NULS HUB IS LOADING..."
 sub.Font = Enum.Font.Gotham
 sub.TextScaled = true
 sub.Size = UDim2.new(0.8, 0, 0.08, 0)
