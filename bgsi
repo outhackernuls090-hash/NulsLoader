@@ -1,0 +1,203 @@
+-- LocalScript | NULS HUB - Bubble Gum Simulator Infinity Loading Screen
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+
+-------------------------------------------------
+-- GUI SETUP
+-------------------------------------------------
+local gui = Instance.new("ScreenGui")
+gui.Name = "NULSHUB_Loading_BGS"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.DisplayOrder = 10000
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local function setZ(obj, z)
+    pcall(function() obj.ZIndex = z end)
+end
+
+-------------------------------------------------
+-- COLORS
+-------------------------------------------------
+local neonGreen = Color3.fromRGB(0, 255, 100)
+local bgColor = Color3.fromRGB(10, 10, 15)
+
+-------------------------------------------------
+-- BACKGROUND
+-------------------------------------------------
+local bg = Instance.new("Frame")
+bg.Size = UDim2.fromScale(1, 1)
+bg.BackgroundColor3 = bgColor
+bg.BorderSizePixel = 0
+bg.Parent = gui
+setZ(bg, 10001)
+
+-------------------------------------------------
+-- TITLE
+-------------------------------------------------
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(0.8, 0, 0.16, 0)
+title.Position = UDim2.new(0.1, 0, 0.32, 0)
+title.BackgroundTransparency = 1
+title.Text = "NULS HUB"
+title.Font = Enum.Font.GothamBlack
+title.TextScaled = true
+title.TextColor3 = neonGreen
+title.Parent = bg
+setZ(title, 10002)
+
+local titleStroke = Instance.new("UIStroke")
+titleStroke.Color = neonGreen
+titleStroke.Thickness = 2
+titleStroke.Transparency = 0.4
+titleStroke.Parent = title
+
+-------------------------------------------------
+-- SUBTITLE
+-------------------------------------------------
+local sub = Instance.new("TextLabel")
+sub.Size = UDim2.new(0.8, 0, 0.07, 0)
+sub.Position = UDim2.new(0.1, 0, 0.48, 0)
+sub.BackgroundTransparency = 1
+sub.Text = "Bubble Gum Simulator Infinity"
+sub.Font = Enum.Font.Gotham
+sub.TextScaled = true
+sub.TextColor3 = Color3.fromRGB(180, 255, 180)
+sub.Parent = bg
+setZ(sub, 10002)
+
+-------------------------------------------------
+-- PROGRESS BAR
+-------------------------------------------------
+local barBg = Instance.new("Frame")
+barBg.Size = UDim2.new(0.65, 0, 0.035, 0)
+barBg.Position = UDim2.new(0.175, 0, 0.6, 0)
+barBg.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+barBg.BorderSizePixel = 0
+barBg.Parent = bg
+setZ(barBg, 10002)
+
+local barCorner = Instance.new("UICorner")
+barCorner.CornerRadius = UDim.new(0, 12)
+barCorner.Parent = barBg
+
+local barFill = Instance.new("Frame")
+barFill.Size = UDim2.new(0, 0, 1, 0)
+barFill.BackgroundColor3 = neonGreen
+barFill.BorderSizePixel = 0
+barFill.Parent = barBg
+setZ(barFill, 10003)
+
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(0, 12)
+fillCorner.Parent = barFill
+
+-------------------------------------------------
+-- PERCENT LABEL
+-------------------------------------------------
+local percent = Instance.new("TextLabel")
+percent.Size = UDim2.new(0.2, 0, 0.05, 0)
+percent.Position = UDim2.new(0.4, 0, 0.66, 0)
+percent.BackgroundTransparency = 1
+percent.Text = "0%"
+percent.Font = Enum.Font.GothamBold
+percent.TextScaled = true
+percent.TextColor3 = neonGreen
+percent.Parent = bg
+setZ(percent, 10004)
+
+local percentStroke = Instance.new("UIStroke")
+percentStroke.Color = neonGreen
+percentStroke.Thickness = 1.5
+percentStroke.Transparency = 0.4
+percentStroke.Parent = percent
+
+-------------------------------------------------
+-- FAKE STATUS TEXT
+-------------------------------------------------
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(0.8, 0, 0.06, 0)
+status.Position = UDim2.new(0.1, 0, 0.72, 0)
+status.BackgroundTransparency = 1
+status.Text = "Initializing..."
+status.Font = Enum.Font.Gotham
+status.TextScaled = true
+status.TextColor3 = Color3.fromRGB(150, 255, 150)
+status.Parent = bg
+setZ(status, 10004)
+
+-------------------------------------------------
+-- INPUT BLOCKER
+-------------------------------------------------
+local blocker = Instance.new("TextButton")
+blocker.Size = UDim2.fromScale(1, 1)
+blocker.BackgroundTransparency = 1
+blocker.Text = ""
+blocker.AutoButtonColor = false
+blocker.Parent = gui
+setZ(blocker, 10005)
+blocker.MouseButton1Down:Connect(function() end)
+
+-------------------------------------------------
+-- FAKE LOADING STEPS
+-------------------------------------------------
+local fakeSteps = {
+    "Loading Game Assets...",
+    "Loading Pets...",
+    "Loading Eggs...",
+    "Loading Worlds...",
+    "Loading UI...",
+    "Loading Script Hub...",
+    "Injecting Modules...",
+    "Finalizing..."
+}
+
+-------------------------------------------------
+-- LOADING LOGIC
+-------------------------------------------------
+local totalTime = 300
+local startTime = tick()
+local stepIndex = 1
+local nextStepTime = 0
+
+RunService.RenderStepped:Connect(function()
+    gui.DisplayOrder = 10000
+end)
+
+while tick() - startTime < totalTime do
+    local elapsed = tick() - startTime
+    local progress = math.clamp(elapsed / totalTime, 0, 1)
+
+    barFill.Size = UDim2.new(progress, 0, 1, 0)
+    percent.Text = string.format("%d%%", math.floor(progress * 100))
+
+    if tick() >= nextStepTime then
+        status.Text = fakeSteps[stepIndex]
+        stepIndex = stepIndex % #fakeSteps + 1
+        nextStepTime = tick() + 2
+    end
+
+    task.wait(0.05)
+end
+
+-------------------------------------------------
+-- FINISH
+-------------------------------------------------
+percent.Text = "100%"
+status.Text = "Loaded Successfully"
+
+task.wait(0.8)
+
+TweenService:Create(
+    bg,
+    TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    { BackgroundTransparency = 1 }
+):Play()
+
+task.wait(1)
+gui:Destroy()
