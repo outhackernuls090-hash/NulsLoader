@@ -1,1 +1,1 @@
-local _ENV=_G;local _p=pcall;local _r=rawset;if debug and debug.gethook then while true do end end if _G._CHECK~=nil then while true do end end local _t=os.clock();for _=1,100 do end ;if os.clock()-_t>0.1 then while true do end end print(_D([[\0e\20\04\55\3f\4a\25\25\32\48\5d]],[[FEh9PjrJ@$9R@8^J]]))
+local PEtyYyYK=string.char(72,101,108,108,111,32,87,111,114,108,100) print(PEtyYyYK)
