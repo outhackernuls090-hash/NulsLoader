@@ -1,4 +1,4 @@
 local _0x0000 = 4
 if _0x0000 > 3 then
-print((function(_0x0001,_0x0002)local _0x0003=""for _0x0004=1,#_0x0001 do _0x0003=_0x0003..string.char(_0x0002[_0x0001[_0x0004]+1])end return _0x0003 end)({1,2,0,0,3},{108,104,101,111}))
+print(string.char(104,101,108,108,111))
 end
