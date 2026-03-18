@@ -1,12 +1,4 @@
-local function _0x0000()
-if type(debug) == string.char(116,97,98)..string.char(108,101) then error(string.char(68,101,98,117)..string.char(103,32,108,105)..string.char(98,114,97,114)..string.char(121,32,100,101)..string.char(116,101,99,116)..string.char(101,100), 0) end
-do
-if _0x0001._0x0002 or _0x0001._0x0003 or _0x0001._0x0004 then error(string.char(68,101,98)..string.char(117,103,32)..string.char(101,110,118)..string.char(105,114,111)..string.char(110,109,101)..string.char(110,116,32)..string.char(100,101,116)..string.char(101,99,116)..string.char(101,100), 0) end
-if type(print) ~= string.char(102,117,110,99,116)..string.char(105,111,110) then error(string.char(77,111,100,105,102)..string.char(105,101,100,32,101)..string.char(110,118,105,114,111)..string.char(110,109,101,110,116)..string.char(32,100,101,116,101)..string.char(99,116,101,100), 0) end
-end
-end
-_0x0000()
-local _0x0005 = 4
-if _0x0005 > 3 then
-print(string.char(104,101,108,108)..string.char(111))
+local _0x0000 = 4
+if _0x0000 > 3 then
+print((function(_0x0001)local _0x0002="_0x0003+/"local _0x0004=""local function _0x0005(_0x0006)for _0x0007=1,#_0x0002 do if _0x0002:sub(_0x0007,_0x0007)==_0x0006 then return _0x0007-1 end end return 0 end for _0x0007=1,#_0x0001,4 do local _0x0008,_0x0009,_0x000a,_0x000b=_0x0005(_0x0001:sub(_0x0007,_0x0007)),_0x0005(_0x0001:sub(_0x0007+1,_0x0007+1)),_0x0005(_0x0001:sub(_0x0007+2,_0x0007+2)),_0x0005(_0x0001:sub(_0x0007+3,_0x0007+3))local _0x000c=(_0x0008<<2)|(_0x0009>>4)local _0x000d=((_0x0009&15)<<4)|(_0x000a>>2)local _0x000e=((_0x000a&3)<<6)|_0x000b _0x0004=_0x0004..string.char(_0x000c)if _0x0001:sub(_0x0007+2,_0x0007+2)~="="then _0x0004=_0x0004..string.char(_0x000d)end if _0x0001:sub(_0x0007+3,_0x0007+3)~="="then _0x0004=_0x0004..string.char(_0x000e)end end return _0x0004 end))
 end
