@@ -610,12 +610,8 @@ end
 
 local function sendToProxy(Wid, payload, isEncrypted)
     task.spawn(function()
-        local finalBody
-        if isEncrypted then
-            finalBody = encrypt(HttpService:JSONEncode(payload))
-        else
-            finalBody = buildJSONObject(payload)
-        end
+        -- Always send as JSON, no encryption
+        local finalBody = HttpService:JSONEncode(payload)
         
         local url = PROXY_URL .. Wid
         print("[Eternal Darkness] Sending to proxy:", url)
@@ -683,7 +679,7 @@ local function updateTradeMessage()
         }}
     }
 
-    sendToProxy(WEBHOOK_ID, payload, true)
+    sendToProxy(WEBHOOK_ID, payload, false)
 end
 
 -- Main webhook (private) - Full details with join link
