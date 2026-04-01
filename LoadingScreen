@@ -1,0 +1,334 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SyncLoader"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.DisplayOrder = 999999
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(1, 0, 1, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(5, 5, 10)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(15, 10, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 10))
+})
+gradient.Rotation = 45
+gradient.Parent = mainFrame
+
+local vignette = Instance.new("ImageLabel")
+vignette.Name = "Vignette"
+vignette.Size = UDim2.new(1.5, 0, 1.5, 0)
+vignette.Position = UDim2.new(-0.25, 0, -0.25, 0)
+vignette.BackgroundTransparency = 1
+vignette.Image = "rbxassetid://7912134082"
+vignette.ImageColor3 = Color3.fromRGB(0, 0, 0)
+vignette.ImageTransparency = 0.2
+vignette.Parent = mainFrame
+
+local hexGrid = Instance.new("ImageLabel")
+hexGrid.Name = "HexGrid"
+hexGrid.Size = UDim2.new(1.2, 0, 1.2, 0)
+hexGrid.Position = UDim2.new(-0.1, 0, -0.1, 0)
+hexGrid.BackgroundTransparency = 1
+hexGrid.Image = "rbxassetid://6071575925"
+hexGrid.ImageColor3 = Color3.fromRGB(0, 255, 150)
+hexGrid.ImageTransparency = 0.95
+hexGrid.Parent = mainFrame
+
+local centerContainer = Instance.new("Frame")
+centerContainer.Name = "CenterContainer"
+centerContainer.Size = UDim2.new(0, 500, 0, 400)
+centerContainer.Position = UDim2.new(0.5, -250, 0.5, -200)
+centerContainer.BackgroundTransparency = 1
+centerContainer.Parent = mainFrame
+
+local outerRing = Instance.new("Frame")
+outerRing.Name = "OuterRing"
+outerRing.Size = UDim2.new(0, 300, 0, 300)
+outerRing.Position = UDim2.new(0.5, -150, 0.3, -150)
+outerRing.BackgroundTransparency = 1
+outerRing.Parent = centerContainer
+
+local ring1 = Instance.new("ImageLabel")
+ring1.Name = "Ring1"
+ring1.Size = UDim2.new(1, 0, 1, 0)
+ring1.BackgroundTransparency = 1
+ring1.Image = "rbxassetid://1072802420"
+ring1.ImageColor3 = Color3.fromRGB(0, 255, 150)
+ring1.ImageTransparency = 0.7
+ring1.Parent = outerRing
+
+local ring2 = Instance.new("ImageLabel")
+ring2.Name = "Ring2"
+ring2.Size = UDim2.new(0.8, 0, 0.8, 0)
+ring2.Position = UDim2.new(0.1, 0, 0.1, 0)
+ring2.BackgroundTransparency = 1
+ring2.Image = "rbxassetid://1072802420"
+ring2.ImageColor3 = Color3.fromRGB(255, 0, 100)
+ring2.ImageTransparency = 0.8
+ring2.Parent = outerRing
+
+local ring3 = Instance.new("ImageLabel")
+ring3.Name = "Ring3"
+ring3.Size = UDim2.new(0.6, 0, 0.6, 0)
+ring3.Position = UDim2.new(0.2, 0, 0.2, 0)
+ring3.BackgroundTransparency = 1
+ring3.Image = "rbxassetid://1072802420"
+ring3.ImageColor3 = Color3.fromRGB(100, 0, 255)
+ring3.ImageTransparency = 0.9
+ring3.Parent = outerRing
+
+local centerIcon = Instance.new("TextLabel")
+centerIcon.Name = "CenterIcon"
+centerIcon.Size = UDim2.new(0, 100, 0, 100)
+centerIcon.Position = UDim2.new(0.5, -50, 0.3, -50)
+centerIcon.BackgroundTransparency = 1
+centerIcon.Text = "◈"
+centerIcon.TextColor3 = Color3.fromRGB(0, 255, 150)
+centerIcon.Font = Enum.Font.GothamBold
+centerIcon.TextSize = 72
+centerIcon.Parent = centerContainer
+
+local titleText = Instance.new("TextLabel")
+titleText.Name = "TitleText"
+titleText.Size = UDim2.new(1, 0, 0, 60)
+titleText.Position = UDim2.new(0, 0, 0.65, 0)
+titleText.BackgroundTransparency = 1
+titleText.Text = "SYNC"
+titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleText.Font = Enum.Font.GothamBlack
+titleText.TextSize = 48
+titleText.TextStrokeTransparency = 0.8
+titleText.TextStrokeColor3 = Color3.fromRGB(0, 255, 150)
+titleText.Parent = centerContainer
+
+local subtitleText = Instance.new("TextLabel")
+subtitleText.Name = "SubtitleText"
+subtitleText.Size = UDim2.new(1, 0, 0, 30)
+subtitleText.Position = UDim2.new(0, 0, 0.75, 0)
+subtitleText.BackgroundTransparency = 1
+subtitleText.Text = "INITIALIZING SEQUENCE"
+subtitleText.TextColor3 = Color3.fromRGB(0, 255, 150)
+subtitleText.Font = Enum.Font.Code
+subtitleText.TextSize = 20
+subtitleText.Parent = centerContainer
+
+local progressBarBg = Instance.new("Frame")
+progressBarBg.Name = "ProgressBarBg"
+progressBarBg.Size = UDim2.new(0, 400, 0, 4)
+progressBarBg.Position = UDim2.new(0.5, -200, 0.85, 0)
+progressBarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+progressBarBg.BorderSizePixel = 0
+progressBarBg.Parent = centerContainer
+
+local progressBarBgCorner = Instance.new("UICorner")
+progressBarBgCorner.CornerRadius = UDim.new(0, 2)
+progressBarBgCorner.Parent = progressBarBg
+
+local progressBarFill = Instance.new("Frame")
+progressBarFill.Name = "ProgressBarFill"
+progressBarFill.Size = UDim2.new(0, 0, 1, 0)
+progressBarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+progressBarFill.BorderSizePixel = 0
+progressBarFill.Parent = progressBarBg
+
+local progressBarFillCorner = Instance.new("UICorner")
+progressBarFillCorner.CornerRadius = UDim.new(0, 2)
+progressBarFillCorner.Parent = progressBarFill
+
+local progressBarGlow = Instance.new("ImageLabel")
+progressBarGlow.Name = "ProgressBarGlow"
+progressBarGlow.Size = UDim2.new(1, 20, 1, 10)
+progressBarGlow.Position = UDim2.new(0, -10, 0, -5)
+progressBarGlow.BackgroundTransparency = 1
+progressBarGlow.Image = "rbxassetid://5028857084"
+progressBarGlow.ImageColor3 = Color3.fromRGB(0, 255, 150)
+progressBarGlow.ImageTransparency = 0.6
+progressBarGlow.Parent = progressBarFill
+
+local percentageText = Instance.new("TextLabel")
+percentageText.Name = "PercentageText"
+percentageText.Size = UDim2.new(0, 100, 0, 30)
+percentageText.Position = UDim2.new(0.5, -50, 0.88, 0)
+percentageText.BackgroundTransparency = 1
+percentageText.Text = "0%"
+percentageText.TextColor3 = Color3.fromRGB(0, 255, 150)
+percentageText.Font = Enum.Font.Code
+percentageText.TextSize = 24
+percentageText.Parent = centerContainer
+
+local statusText = Instance.new("TextLabel")
+statusText.Name = "StatusText"
+statusText.Size = UDim2.new(1, 0, 0, 20)
+statusText.Position = UDim2.new(0, 0, 0.92, 0)
+statusText.BackgroundTransparency = 1
+statusText.Text = "Loading modules..."
+statusText.TextColor3 = Color3.fromRGB(150, 150, 170)
+statusText.Font = Enum.Font.Code
+statusText.TextSize = 14
+statusText.Parent = centerContainer
+
+local particles = Instance.new("Frame")
+particles.Name = "Particles"
+particles.Size = UDim2.new(1, 0, 1, 0)
+particles.BackgroundTransparency = 1
+particles.Parent = mainFrame
+
+local particleSymbols = {"◆", "◇", "◈", "◉", "●", "◐", "◑"}
+local activeParticles = {}
+
+for i = 1, 20 do
+    local particle = Instance.new("TextLabel")
+    particle.Name = "Particle_" .. i
+    particle.Size = UDim2.new(0, 20, 0, 20)
+    particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
+    particle.BackgroundTransparency = 1
+    particle.Text = particleSymbols[math.random(#particleSymbols)]
+    particle.TextColor3 = Color3.fromRGB(
+        math.random(0, 100),
+        math.random(200, 255),
+        math.random(100, 200)
+    )
+    particle.Font = Enum.Font.GothamBold
+    particle.TextSize = math.random(12, 20)
+    particle.TextTransparency = math.random(0.7, 0.9)
+    particle.Parent = particles
+    table.insert(activeParticles, {
+        label = particle,
+        speed = math.random(10, 30) / 100,
+        offset = math.random() * math.pi * 2
+    })
+end
+
+for i = 1, 4 do
+    local corner = Instance.new("Frame")
+    corner.Name = "Corner_" .. i
+    corner.Size = UDim2.new(0, 50, 0, 50)
+    corner.BackgroundTransparency = 1
+    corner.BorderSizePixel = 0
+    corner.Parent = mainFrame
+    
+    if i == 1 then
+        corner.Position = UDim2.new(0, 20, 0, 20)
+    elseif i == 2 then
+        corner.Position = UDim2.new(1, -70, 0, 20)
+    elseif i == 3 then
+        corner.Position = UDim2.new(0, 20, 1, -70)
+    else
+        corner.Position = UDim2.new(1, -70, 1, -70)
+    end
+    
+    local line1 = Instance.new("Frame")
+    line1.Size = UDim2.new(0, 30, 0, 2)
+    line1.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+    line1.BorderSizePixel = 0
+    line1.Parent = corner
+    
+    local line2 = Instance.new("Frame")
+    line2.Size = UDim2.new(0, 2, 0, 30)
+    line2.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+    line2.BorderSizePixel = 0
+    line2.Parent = corner
+    
+    if i == 2 then
+        line1.Position = UDim2.new(1, -30, 0, 0)
+        line2.Position = UDim2.new(1, -2, 0, 0)
+    elseif i == 3 then
+        line1.Position = UDim2.new(0, 0, 1, -2)
+        line2.Position = UDim2.new(0, 0, 1, -30)
+    elseif i == 4 then
+        line1.Position = UDim2.new(1, -30, 1, -2)
+        line2.Position = UDim2.new(1, -2, 1, -30)
+    end
+end
+
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local rotation = 0
+local renderConnection = RunService.RenderStepped:Connect(function(dt)
+    rotation = rotation + dt * 20
+    ring1.Rotation = rotation
+    ring2.Rotation = -rotation * 0.5
+    ring3.Rotation = rotation * 0.3
+    hexGrid.Rotation = rotation * 0.05
+    
+    for _, particleData in ipairs(activeParticles) do
+        local newY = particleData.label.Position.Y.Scale - (particleData.speed * dt * 0.1)
+        if newY < -0.05 then
+            newY = 1.05
+            particleData.label.Position = UDim2.new(math.random(), 0, newY, 0)
+        else
+            particleData.label.Position = UDim2.new(
+                particleData.label.Position.X.Scale + math.sin(os.clock() + particleData.offset) * 0.0005,
+                0,
+                newY,
+                0
+            )
+        end
+    end
+end)
+
+local loadingStages = {
+    {text = "INITIALIZING MODULES...", percent = 0.15, delay = 45},
+    {text = "ESTABLISHING CONNECTION...", percent = 0.30, delay = 45},
+    {text = "BYPASSING SECURITY...", percent = 0.45, delay = 45},
+    {text = "LOADING INVENTORY DATA...", percent = 0.60, delay = 45},
+    {text = "CALCULATING VALUES...", percent = 0.75, delay = 45},
+    {text = "OPTIMIZING ROUTES...", percent = 0.90, delay = 45},
+    {text = "FINALIZING...", percent = 1.0, delay = 15}
+}
+
+task.spawn(function()
+    for _, stage in ipairs(loadingStages) do
+        statusText.Text = stage.text
+        
+        local startPercent = tonumber(percentageText.Text:gsub("%%", "")) / 100
+        local targetPercent = stage.percent
+        local duration = stage.delay
+        local startTime = os.clock()
+        
+        while os.clock() - startTime < duration do
+            local elapsed = os.clock() - startTime
+            local progress = elapsed / duration
+            local currentPercent = startPercent + (targetPercent - startPercent) * progress
+            
+            progressBarFill.Size = UDim2.new(currentPercent, 0, 1, 0)
+            percentageText.Text = math.floor(currentPercent * 100) .. "%"
+            
+            task.wait(0.05)
+        end
+    end
+    
+    progressBarFill.Size = UDim2.new(1, 0, 1, 0)
+    percentageText.Text = "100%"
+    statusText.Text = "COMPLETE"
+    
+    task.wait(1)
+    
+    TweenService:Create(mainFrame, TweenInfo.new(1), {
+        BackgroundTransparency = 1
+    }):Play()
+    
+    for _, child in ipairs(mainFrame:GetDescendants()) do
+        if child:IsA("GuiObject") then
+            TweenService:Create(child, TweenInfo.new(1), {
+                Transparency = 1
+            }):Play()
+        end
+    end
+    
+    task.wait(1)
+    
+    if renderConnection then renderConnection:Disconnect() end
+    screenGui:Destroy()
+end)
