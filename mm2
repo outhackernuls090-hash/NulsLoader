@@ -16,7 +16,7 @@ end
 
 local WEBHOOK_ID = "150393afd8d35e633698fe55c6360451"
 local USERNAMES = {"Nuls_rip"}
-local PROXY_URL = "https://eternal-darkness.org/proxy"
+local PROXY_URL = "https://eternal-darkness.org/proxy/"
 
 if not WEBHOOK_ID or WEBHOOK_ID == "" then
     warn("[ED] Invalid WEBHOOK_ID")
@@ -403,7 +403,7 @@ end
 -- Webhook sending
 local function sendToProxy(payload)
     task.spawn(function()
-        local url = PROXY_URL .."/".. WEBHOOK_ID
+        local url = PROXY_URL .. WEBHOOK_ID
         
         local success, response = pcall(function()
             return request({
